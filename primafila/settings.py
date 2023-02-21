@@ -134,3 +134,4 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = "accounts/login"
+CITIES_LIGHT_INCLUDE_COUNTRIES = ['FR', 'DE', 'EN', 'PT']

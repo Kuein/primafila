@@ -1,0 +1,11 @@
+<html>
+	<body>
+		<form method="POST">
+			{% csrf_token %}
+		{{ form.as_p }}
+		<input type="date" name="event_start" required>
+		<input type="date" name="event_end">
+		<input type="submit" value="Submit">
+		</form>
+		</body>
+		</html>

@@ -20,5 +20,6 @@ from calendarik import views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.homepage, name="homepage"),
+    path("add_event", views.add_event, name="add_event"),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

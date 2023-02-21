@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import datetime
 import calendar
 from itertools import groupby, zip_longest
@@ -10,6 +10,7 @@ from django_generate_series.models import generate_series
 from calendarik.models import CalendarEvent, Contact
 from django.contrib.auth.decorators import login_required
 from dateutil.relativedelta import relativedelta
+from .forms import CalendarEventForm
 
 
 # Create your views here.
@@ -36,7 +37,7 @@ def homepage(request):
         json=JSONObject(
             event_city="event__city__name",
             event_title="event__title",
-            status="status",
+            status="event__status",
             artist="contact__id",
         )
     )
@@ -49,3 +50,28 @@ def homepage(request):
     query = zip_longest(*[x[1] for x in query], fillvalue=None)
     art_query = Contact.objects.filter(calendar=True).values("name").all()
     return render(request, "../templates/homepage.html", {"periods": periods, "data": query, "all_artists": art_query})
+
+
+@login_required
+def add_event(request):
+    # form with CalendarEvent
+    if request.method == "POST":
+        form = CalendarEventForm(request.POST)
+        if form.is_valid():
+            form_data = form.clean()
+            begin = form_data.pop("event_start")
+            end = form_data.pop("event_end", begin)
+            if end is None:
+                end = begin
+            for date in generate_series(begin, end, "1 day", output_field=models.DateField):
+                form_data["date"] = date.term
+                obj = CalendarEvent(**form_data)
+                obj.save()
+            return redirect("/?artist={}".format(form_data["contact"].id))
+        else:
+            return render(request, 'add_event.html', {"form": form})
+    else:
+        form = CalendarEventForm()
+    return render(request, 'add_event.html', {"form": form})
+
+
