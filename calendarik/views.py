@@ -79,8 +79,6 @@ def login_view(request):
         if user is not None:
             login(request, user)
             return redirect("/")
-        else:
-            return render(request, "../templates/login.html")
     return render(request, "../templates/login.html")
 
 @login_required
@@ -108,8 +106,6 @@ def search(request):
             res = search_query.all()
             context["results"] = res
             return render(request, "../templates/search.html", context)
-        else:
-            return render(request, "../templates/search.html", context)
     return render(request, "../templates/search.html", context)
 
 def get_roles(request):
@@ -121,17 +117,22 @@ def get_roles(request):
 @login_required
 def edit_event(request):
     if request.method == "GET":
-        event_id = request.GET.get("event_id")
+        event_id = request.GET.get("id")
         event = CalendarEvent.objects.get(id=event_id)
         # TODO: select form depends on type of event
-        form = CalendarEventForm(instance=event)
+        if event.event_type == "travel":
+            form = TravelForm(instance=event)
+        elif event.event_type == "engagement":
+            form = EngagementForm(instance=event)
+        else:
+            form = OtherForm(instance=event)
         return render(request, "../templates/edit_event.html", {"form": form})
     else:
         event_id = request.POST.get("event_id")
         form = CalendarEventForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("/?restore_session=1")
+            return redirect("/")
         else:
             return render(request, "../templates/edit_event.html", {"form": form})
 
@@ -151,81 +152,64 @@ def create_context(form, request):
     return context
 
 
-def fill_calendar(event, event_start, event_end):
-    if event_end is None:
-        event_end = event_start
-    for date in rrule(DAILY, dtstart=event_start, until=event_end):
-        CalendarEvent.objects.create(
-            event=event,
-            date=date,
-            artist=event.artist,
-            status=event.status,
-            title=event.title,
-        )
+def fill_calendar(event, periods):
+    for period in periods:
+        for date in rrule(DAILY, dtstart=period[0], until=period[1]):
+            CalendarEvent.objects.create(
+                event=event,
+                date=date,
+                artist=event.artist,
+                status=event.status,
+                title=event.title,
+            )
 
-def separate_form_data(form):
-    event_start = form.cleaned_data.pop("event_start")
-    event_end = form.cleaned_data.pop("event_end")
+def separate_form_data(request, form):
+    periods = []
+    for i in range(10):
+        if f"event_start_{i}" in request.POST.keys():
+            season_start = datetime.datetime.strptime(request.POST[f"event_start_{i}"], "%Y-%m-%d").date()
+            season_end = request.POST[f"event_end_{i}"]
+            if season_end=="":
+                season_end = season_start
+            else:
+                season_end = datetime.datetime.strptime(season_end, "%Y-%m-%d").date()
+            periods.append((season_start, season_end))
     happening = form.cleaned_data.pop("happening")
-#    inner_files = form.cleaned_data.pop("inner_files")
-#    artist_files = form.cleaned_data.pop("artist_files")
     artist = Artist.objects.get(id=form.cleaned_data.pop("artist"))
-    return event_start, event_end, happening, artist
+    return periods, happening, artist
 
 
 @login_required
-def travel(request):
-    context = create_context(TravelForm, request)
+def event(request):
+    ttype = request.GET.get("type", "other")
+    if ttype == "other":
+        form_type = OtherForm
+        event_type= 3
+        template = "../templates/other.html"
+    elif ttype == "travel":
+        form_type = TravelForm
+        event_type= 2
+        template = "../templates/travel.html"
+    else:
+        form_type = EventForm
+        event_type=4
+        template = "../templates/event.html"
+    context = create_context(form_type(), request)
     if request.method == "POST":
-        form = TravelForm(request.POST)
+        form = form_type(request.POST)
         if form.is_valid():
-            event_start, event_end, happening, artist = separate_form_data(form)
+            periods, happening, artist = separate_form_data(request, form)
+            inner_files = request.FILES.getlist("inner_files")
+            artist_files = request.FILES.getlist("artist_files")
+            _ = form.cleaned_data.pop("inner_files")
+            _ = form.cleaned_data.pop("artist_files")
             event = Event.objects.create(**form.cleaned_data)
             event.artist = artist
-            event.event_type = 1
-            # TODO: event title generation
+            event.event_type = event_type
             if happening:
                 event.status = "happening"
             event.save()
-            fill_calendar(event, event_start, event_end)
+            fill_calendar(event, periods)
             return redirect("/")
-    return render(request, "../templates/travel.html", context)
+    return render(request, template, context)
 
-
-
-
-@login_required
-def other(request):
-    context = create_context(OtherForm(), request)
-    if request.method == "POST":
-        form = OtherForm(request.POST)
-        if form.is_valid():
-            event_start, event_end, happening, artist = separate_form_data(form)
-            event = Event.objects.create(**form.cleaned_data)
-            event.artist = artist
-            event.event_type = 3
-            # TODO: event title generation
-            if happening:
-                event.status = "happening"
-            event.save()
-            fill_calendar(event, event_start, event_end)
-            return redirect("/")
-    return render(request, "../templates/other.html", {"form": form})
-
-@login_required
-def engagement(request):
-    context = create_context(EngagementForm(), request)
-    if request.method == "POST":
-        form = EngagementForm(request.POST)
-        if form.is_valid():
-            event_start, event_end, happening, artist = separate_form_data(form)
-            event = Event.objects.create(**form.cleaned_data)
-            event.artist = artist
-            event.event_type = 3
-            # TODO: event title generation
-            if happening:
-                event.status = "happening"
-            event.save()
-            fill_calendar(event, event_start, event_end)
-            return redirect("/")
-    return render(request, "../templates/engagement.html", context)

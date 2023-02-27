@@ -10,8 +10,8 @@ class SearchForm(forms.Form):
 
 
 class OtherForm(forms.Form):
-    event_start = forms.DateField()
-    event_end = forms.DateField(required=False)
+#    event_start = forms.DateField(required=False)
+#    event_end = forms.DateField(required=False)
     artist = forms.ChoiceField(choices=Artist.objects.values_list("id", "name").all())
     inner_notes = forms.CharField(required=False)
     artist_notes = forms.CharField(required=False)

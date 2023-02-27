@@ -125,7 +125,7 @@ text-align: center;
 					<tr>
 						{% for tuple in item %}
 						<td class="calendar_date">{{tuple.term|date:"d"}}<br>{{tuple.term|date:"D"}}</td><td id="{{tuple.term|date:'c'}}" class="calendar_event">{% for event in tuple.events %}
-							<p class={{event.status}} id="{{tuple.term|date:'c'}} {{event.artist}} {{event.id}}">{{event.event_title}}</p>
+							<p class={{event.status}}><a href="/edit_event?id={{event.event_id}}">{{event.event_title}}</a></p>
 						{% endfor %}</td>
 						{% endfor %}
 					</tr>
@@ -162,16 +162,16 @@ window.addEventListener("click", e => {
 window.addEventListener("contextmenu", e => {
 	var targetElement = event.target
 	var event_date = targetElement.id
-    if (targetElement.nodeName === "TD") {
+    if (targetElement.nodeName === "TD")  {
   e.preventDefault();
   const origin = {
     left: e.pageX,
     top: e.pageY
   };
 	document.getElementById("menu-edit").href = "/edit?date=" + event_date;
-	document.getElementById("menu-travel").href = "/travel?date=" + event_date;
-	document.getElementById("menu-other").href = "/other?date=" + event_date;
-	document.getElementById("menu-engagement").href = "/engagement?date=" + event_date;
+	document.getElementById("menu-travel").href = "/event?type=travel&date=" + event_date;
+	document.getElementById("menu-other").href = "/event?type=other&date=" + event_date;
+	document.getElementById("menu-engagement").href = "/event?type=engagement&date=" + event_date;
   setPosition(origin);
     }
 });

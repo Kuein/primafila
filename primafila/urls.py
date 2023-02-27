@@ -25,8 +25,9 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("search", views.search, name="search"),
     path("get_roles", views.get_roles, name="get_roles"),
+    path("event", views.event, name="event"),
     path("edit_event", views.edit_event, name="edit_event"),
-    path("travel", views.travel, name="travel"),
-    path("other", views.other, name="other"),
-    path("engagement", views.engagement, name="engagement"),
+#    path("travel", views.travel, name="travel"),
+#    path("other", views.other, name="other"),
+#    path("engagement", views.engagement, name="engagement"),
 ]

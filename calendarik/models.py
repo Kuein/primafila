@@ -55,6 +55,9 @@ class Opera(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
 
+    def __str__(self):
+        return self.title
+
 
 class Role(models.Model):
     name = models.CharField(max_length=100)
@@ -73,7 +76,7 @@ EVENT_STATUS = (
     ("inner", "Inner"),
 )
 TRAVEL_TYPE = ((1, "Travel to"), (2, "Travel from"), (3, "Hotel"))
-ENGAGEMENT_TYPE = ((1, "Premiere"), (2, "Performance"), (3, "Concert"))
+ENGAGEMENT_TYPE = ((1, "Premiere"), (2, "Performance"), (3, "Rehearsal"))
 TRAVEL_PAY_TYPE = ((1, "Per diem"), (2, "Flat fee"), (3, "Mileage"), (4, "Other"))
 ACCOMODATION_TYPE = ((1, "Hotel"), (2, "Airbnb"), (3, "Other"))
 
