@@ -1,0 +1,31 @@
+{% load has_group %}
+<html>
+<head>
+<title>Travel</title>
+</head>
+<body>
+	<form method="post" >
+		{% csrf_token %}
+		<p><label>Travel type:</label><select name="travel_type">
+			<option value="1">Travel from</option>
+			<option value="2">Travel to</option>
+			<option value="3">Hotel</option>
+			</select></p>
+			<p><label>Event start:</label><input type="date" name="event_start" value="{{start_date}}" required><label>Event end:</label><input type="date" name="event_end"></p>
+		{% if request.user|has_group:'Admin' %}
+
+		<p><label>Will happen:</label><input type="checkbox" name="happening"></p>
+		<p><label>Artist:</label><select name="artist">
+			{% for artist in artists %}
+				<option value="{{ artist.0 }}">{{ artist.1 }}</option>
+			{% endfor %}
+			</select></p>
+		<p><label>Inner notes</label><textarea name="inner_notes"></textarea></p>
+		<p><label>Inner files</label><input type="file" name="inner_files"></p>
+		{% endif %}
+		<p><label>Notes</label><textarea name="notes"></textarea></p>
+		<p><label>Files</label><input type="file" name="files"></p>
+	<input type="submit" value="Submit" />
+	</form>
+	</body>
+	</html>

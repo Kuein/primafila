@@ -20,6 +20,13 @@ from calendarik import views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.homepage, name="homepage"),
-    path("add_event", views.add_event, name="add_event"),
-    path('accounts/', include('django.contrib.auth.urls')),
+#    path("add_event", views.add_event, name="add_event"),
+    path("login", views.login_view, name="login"),
+    path("logout", views.logout_view, name="logout"),
+    path("search", views.search, name="search"),
+    path("get_roles", views.get_roles, name="get_roles"),
+    path("edit_event", views.edit_event, name="edit_event"),
+    path("travel", views.travel, name="travel"),
+    path("other", views.other, name="other"),
+    path("engagement", views.engagement, name="engagement"),
 ]

@@ -2,10 +2,49 @@
 	<body>
 		<form method="POST">
 			{% csrf_token %}
-		{{ form.as_p }}
-		<input type="date" name="event_start" required>
-		<input type="date" name="event_end">
+			<p><label>Event start:</label><input type="date" name="event_start" required>&nbsp<label>Event end:</label><input type="date" name="event_end"></p>
+			<p><label>Type:</label><select onchange="switchTabs()" name="event_type" id="event_type">
+				<option value="1">Travel</option>
+				<option value="3">Other</option>
+				<option value="4">Engagement</option>
+			</select></p>
+			<p><label>Artist:</label>{{ form.artist }}</p>
+			<div id="Other" style="display:none">
+				<p>Other fields</p>
+			</div>
+			<div id="Travel">
+				<p>Travel fields</p>
+			</div>
+			<div id="Engagement" style="display:none">
+			<p><label>Contact:</label>{{ form.contact }}</p>
+			<p><label>Event:</label>{{ form.event }}</p>
+			<p><label>City:</label>{{ form.city }}</p>
+			<p><label>Visible to Artist:</label>{{ form.visible_to_artist }}</p>
+			<p><label>Another agency:</label>{{ form.another_agency }}</p>
+			</div>
+
 		<input type="submit" value="Submit">
 		</form>
+		<script>
+			function switchTabs() {
+				var current = document.getElementById("event_type").value;
+				var x = document.getElementById("Other");
+				var y = document.getElementById("Travel");
+				var z = document.getElementById("Engagement");
+				if (current == "1") {
+					x.style.display = "none";
+					y.style.display = "block";
+					z.style.display = "none";
+				} else if (current == "3") {
+					x.style.display = "block";
+					y.style.display = "none";
+					z.style.display = "none";
+				} else if (current == "4") {
+					x.style.display = "none";
+					y.style.display = "none";
+					z.style.display = "block";
+				}
+			}
+		</script>
 		</body>
 		</html>

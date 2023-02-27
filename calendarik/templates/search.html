@@ -50,41 +50,38 @@ p {
 	background-color: yellow;
 }
 
+.cont {
+	display: grid;
+	grid-template-columns: [label] 1fr [pole] 3fr;
+}
+
+.form-label {
+	grid-column: label;
+}
+
+.form-field {
+	grid-column: pole;
+}
+
 .calendar_date {
-	width: 1.5%;
+	width: 1.5% !important;
 }
 
 .calendar_event {
-	width: 11.5%;
+	width: 11.5% !important;
   text-align: left;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.menu {
-  width: 120px;
-  z-index: 1;
-  box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
-  position: fixed;
-  display: none;
-  transition: 0.2s display ease-in;
-}
-    .menu-option {
-      font-weight: 500;
-      font-size: 14px;
-      cursor: pointer;
-    }
-.menu-option:hover {
-  background-color: #f5f5f5;
 }
 
 td {
   text-align: left;
   border: 1px solid #dddddd;
 }
-th {
-text-align: center;
-}
+				th {
+	text-align: center;
+				}
 	</style>
 	</head>
 	<body>
@@ -100,6 +97,7 @@ text-align: center;
                     <a href="#" class="nav-item nav-link">Contacts</a>
                     <a href="/" class="nav-item nav-link">Calendar</a>
                     <a href="/search" class="nav-item nav-link">Search</a>
+		    <a href="/add_event" class="nav-item nav-link">Add event</a>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Artists</a>
                         <div class="dropdown-menu">
@@ -114,67 +112,53 @@ text-align: center;
             </div>
         </div>
     </nav>
-
-	<table><thead><tr>
-				{% for period in periods %}
-				<th class="calendar_date"></th>
-				<th class="calendar_event" text-align="center">{{period}}</th>
+		<form method="POST">
+			{% csrf_token %}
+			<div class="cont">
+				<label>Opera:</label><input list="opera_list" class="form-field" type="text" id="opera" name="opera">
+				<datalist id="opera_list">
+				{% for opera in all_operas %}
+				<option value="{{opera.title}}">{{opera.name}}</option>
 				{% endfor %}
-			</tr></thead><tbody>
-					{% for item in data %}
-					<tr>
-						{% for tuple in item %}
-						<td class="calendar_date">{{tuple.term|date:"d"}}<br>{{tuple.term|date:"D"}}</td><td id="{{tuple.term|date:'c'}}" class="calendar_event">{% for event in tuple.events %}
-							<p class={{event.status}} id="{{tuple.term|date:'c'}} {{event.artist}} {{event.id}}">{{event.event_title}}</p>
-						{% endfor %}</td>
-						{% endfor %}
-					</tr>
+				</datalist>
+				<label>Role:</label><input list="roles_list" class="form-field" type=text id="role" name="role">
+				<datalist id="roles_list">
+				{% for role in all_roles %}
+				<option value="{{role.name}}">{{role.name}}</option>
 				{% endfor %}
-				</tbody>
-		</table>
-     </div>
-     <div class="menu">
-	  <a class="menu-option" id="menu-edit" href="">Edit
-	  <a class="menu-option" id="menu-travel" href="">Travel
-	  <a class="menu-option" id="menu-other" href="">Other
-	  <a class="menu-option" id="menu-engagement" href="">Engagement
-</div>
-     <script>
-	     const menu = document.querySelector(".menu");
-const menuOption = document.querySelector(".menu-option");
-let menuVisible = false;
+				</datalist>
+				<label>Promoter:</label><input list="promoter_list" class="form-field" type=text id="promoter" name="promoter"/>
+				<datalist id="promoter_list">
+				{% for promoter in all_promoters %}
+				<option value="{{promoter.name}}">{{promoter.name}}</option>
+				{% endfor %}
+				</datalist>
+				<input type="submit" value="Search">
+			</div>
+		</form>
+		<ul>
+		{% for result in results %}
+		<li>{{ result }}</li>
+		{% endfor %}
+		</ul>
 
-const toggleMenu = command => {
-  menu.style.display = command === "show" ? "block" : "none";
-  menuVisible = !menuVisible;
-};
-
-const setPosition = ({ top, left }) => {
-  menu.style.left = `${left}px`;
-  menu.style.top = `${top}px`;
-  toggleMenu("show");
-};
-
-window.addEventListener("click", e => {
-  if (menuVisible) toggleMenu("hide");
-});
-
-window.addEventListener("contextmenu", e => {
-	var targetElement = event.target
-	var event_date = targetElement.id
-    if (targetElement.nodeName === "TD") {
-  e.preventDefault();
-  const origin = {
-    left: e.pageX,
-    top: e.pageY
-  };
-	document.getElementById("menu-edit").href = "/edit?date=" + event_date;
-	document.getElementById("menu-travel").href = "/travel?date=" + event_date;
-	document.getElementById("menu-other").href = "/other?date=" + event_date;
-	document.getElementById("menu-engagement").href = "/engagement?date=" + event_date;
-  setPosition(origin);
-    }
-});
-	     </script>
+	<script>
+		document.getElementById("opera").addEventListener("change", function() {
+			var opera_value = document.getElementById("opera").value;
+			const url = "/get_roles?opera="+opera_value;
+			fetch(url)
+			.then((resp) => resp.json()).then(function(data) {
+				console.log(data);
+				var role_list = document.getElementById("roles_list");
+				role_list.innerHTML = "";
+				for (var i = 0; i < data.length; i++) {
+					var option = document.createElement("option");
+					option.value = data[i].name;
+					role_list.appendChild(option);
+				}
+			});
+			document.getElementById("role").value = "";
+		});
+	</script>
 	</body>
 </html>

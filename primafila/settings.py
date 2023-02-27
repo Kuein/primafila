@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "calendarik",
     "django_generate_series",
-    "cities_light",
 ]
 
 MIDDLEWARE = [
@@ -81,7 +80,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'OPTIONS': {
-            'options': '-c search_path=primaschema'
+            'options': '-c search_path=public'
             },
         'NAME': 'primafila',
         'USER': 'primauser',
@@ -133,5 +132,5 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = "accounts/login"
-CITIES_LIGHT_INCLUDE_COUNTRIES = ['FR', 'DE', 'EN', 'PT']
+LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "/login"
