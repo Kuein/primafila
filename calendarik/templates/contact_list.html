@@ -1,3 +1,4 @@
+
 <html>
 	<head>
 		<title>PrimaFila calendar</title>
@@ -98,39 +99,20 @@ td {
             </div>
         </div>
     </nav>
-		<form class="form-horizontal row" method="POST">
+		<form class="form-horizontal row" action="/contact_list" method="POST">
 			{% csrf_token %}
-			<div class="mb-3 input-group">
-				<label class="input-group-text">Opera:</label><input list="opera_list" class="form-control" type="text" id="opera" name="opera">
-				<datalist id="opera_list">
-				{% for opera in all_operas %}
-				<option value="{{opera.title}}">{{opera.name}}</option>
-				{% endfor %}
-				</datalist>
-			</div>
-			<div class="mb-3 input-group">
-				<label class="input-group-text">Role:</label><input list="roles_list" class="form-control" type=text id="role" name="role">
-				<datalist id="roles_list">
-				{% for role in all_roles %}
-				<option value="{{role.name}}">{{role.name}}</option>
-				{% endfor %}
-				</datalist>
-			</div>
-			<div class="mb-3 input-group">
-				<label class="input-group-text">Promoter:</label><input list="promoter_list" class="form-control" type=text id="promoter" name="promoter"/>
-				<datalist id="promoter_list">
-				{% for promoter in all_promoters %}
-				<option value="{{promoter.name}}">{{promoter.name}}</option>
-				{% endfor %}
-				</datalist>
-			</div>
+
+			<div class="input-group">
+				<label class="input-group-text">Search</label><input name="query">
 				<input type="submit" value="Search">
+			</div>
 
 		</form>
-		<table>
-			<tr><th>Artist</th><th>Date</th><th>Promoter</th><th>Status</th><th>Role</th><th>Opera</th><th>Fee</th></tr>
-			{% for event in results %}
-			<tr><td>{{event.artist}}</td><td>{{event.date}}</td><td>{{event.event.promoter}}</td><td>{{event.status}}</td><td>{{event.event.role}}</td><td>{{event.event.opera}}</td><td>{{event.event.fee}}</td></tr>
+		<a href="/contact">Add contact</a>
+		<table class="table">
+			<tr><th>Name</th><th>Email</th><th>Phone</th><th>Position</th><th>Promoter</th></tr>
+			{% for contact in contacts %}
+			<tr><td>{{contact.name}}</td><td>{{contact.email}}</td><td>{{contact.phone}}</td><td>{{contact.position}}</td><td>{{contact.promoter}}</td></tr>
 			{% endfor %}
 			</table>
 

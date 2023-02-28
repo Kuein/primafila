@@ -18,9 +18,6 @@ font-size: 9px;
   table-layout: fixed;
   width: 100%;
 }
-p {
-	margin: 0;
-}
 .request
 	{
 	border: 0px solid black;
@@ -97,7 +94,7 @@ text-align: center;
 	    <div class="navbar-nav ms-auto">
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav">
-                    <a href="#" class="nav-item nav-link">Contacts</a>
+                    <a href="/contact_list" class="nav-item nav-link">Contacts</a>
                     <a href="/" class="nav-item nav-link">Calendar</a>
                     <a href="/search" class="nav-item nav-link">Search</a>
                     <div class="nav-item dropdown">
@@ -134,11 +131,11 @@ text-align: center;
 		</table>
      </div>
      <div class="menu">
-	  <a class="menu-option" id="menu-edit" href="">Edit
-	  <a class="menu-option" id="menu-travel" href="">Travel
-	  <a class="menu-option" id="menu-other" href="">Other
-	  <a class="menu-option" id="menu-engagement" href="">Engagement
+	     <p><a class="menu-option" id="menu-travel" href="">Travel</a></p>
+	     <p><a class="menu-option" id="menu-other" href="">Other</a></p>
+	     <p><a class="menu-option" id="menu-engagement" href="">Engagement</a></p>
 </div>
+
      <script>
 	     const menu = document.querySelector(".menu");
 const menuOption = document.querySelector(".menu-option");
@@ -162,19 +159,50 @@ window.addEventListener("click", e => {
 window.addEventListener("contextmenu", e => {
 	var targetElement = event.target
 	var event_date = targetElement.id
-    if (targetElement.nodeName === "TD")  {
+    if (targetElement.nodeName === "TD") {
   e.preventDefault();
   const origin = {
     left: e.pageX,
     top: e.pageY
   };
-	document.getElementById("menu-edit").href = "/edit?date=" + event_date;
 	document.getElementById("menu-travel").href = "/event?type=travel&date=" + event_date;
 	document.getElementById("menu-other").href = "/event?type=other&date=" + event_date;
 	document.getElementById("menu-engagement").href = "/event?type=engagement&date=" + event_date;
   setPosition(origin);
     }
 });
+	function correct_date() {
+		var dataset = document.getElementsByClassName("dataset");
+		for (var i = 0; i < dataset.length; i++) {
+			var start = dataset[i].childNodes[2].value;
+			console.log(dataset[i].childNodes[4]);
+			dataset[i].childNodes[4].setAttribute("min", start);
+		}
+	}
+	function add_dataset() {
+		var dataset = document.getElementsByClassName("dataset");
+		var new_dataset = dataset[0].cloneNode(true);
+		for (var i = 0; i < new_dataset.childNodes.length; i++) {
+			var child = new_dataset.childNodes[i];
+			if (child.name == undefined) {
+				continue;
+			}
+			if (child.name.includes("event_start")) {
+				child.name = "event_start_" + dataset.length;
+			}
+			if (child.name.includes("event_end")) {
+				child.name = "event_end_" + dataset.length;
+			}
+		}
+		dataset[0].parentNode.appendChild(new_dataset);
+	}
+	function remove_dataset() {
+		var dataset = document.getElementsByClassName("dataset");
+		if (dataset.length > 1) {
+			dataset[0].parentNode.removeChild(dataset[dataset.length - 1]);
+		}
+	}
+</script>
 	     </script>
 	</body>
 </html>

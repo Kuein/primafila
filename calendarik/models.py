@@ -74,6 +74,7 @@ EVENT_STATUS = (
     ("contract", "Contract"),
     ("happening", "Happening"),
     ("inner", "Inner"),
+    ("normal", "Normal"),
 )
 TRAVEL_TYPE = ((1, "Travel to"), (2, "Travel from"), (3, "Hotel"))
 ENGAGEMENT_TYPE = ((1, "Premiere"), (2, "Performance"), (3, "Rehearsal"))
@@ -108,7 +109,7 @@ class Event(models.Model):
         related_name="promoter",
     )
     status = models.CharField(
-        max_length=100, choices=EVENT_STATUS, null=True, blank=True
+        max_length=100, choices=EVENT_STATUS, null=True, blank=True, default="normal"
     )
     fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     visible_to_artist = models.BooleanField(default=False)
@@ -122,11 +123,19 @@ class Event(models.Model):
     accomodation_type = models.IntegerField(
         choices=ACCOMODATION_TYPE, null=True, blank=True
     )
+    last_edited = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.title
 
     def save(self, *arg, **kwargs):
+        if self.event_type == 2:
+            if self.travel_type in (1, '1'):
+                self.title = f"✈️ {self.city}"
+            elif self.travel_type in (2, '2'):
+                self.title = f"{self.city} ✈️"
+            elif self.travel_type in (3, '3'):
+                self.title = f"🏠 {self.city}"
         if not self.title:
             self.title = f"{self.city} - {self.opera}"
         if not self.title.endswith("a.A.") and self.another_agency:
@@ -156,6 +165,9 @@ class CalendarEvent(models.Model):
     date = models.DateField()
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(choices=EVENT_STATUS, max_length=100, null=True, blank=True)
+    engagement_type = models.IntegerField(
+        choices=ENGAGEMENT_TYPE, null=True, blank=True
+    )
 
     def __str__(self):
         return self.title

@@ -22,15 +22,23 @@ class OtherForm(forms.Form):
 
 class TravelForm(OtherForm):
     # Travel_to Travel_from Hotel
+    city = forms.CharField(required=False)
     travel_type = forms.ChoiceField(required=False, choices=TRAVEL_TYPE)
 
 class EngagementForm(OtherForm):
-    opera = forms.ModelChoiceField(queryset=Opera.objects.all())
-    role = forms.ModelChoiceField(queryset=Role.objects.all())
-    promoter = forms.ModelChoiceField(queryset=Promoter.objects.all())
+    opera = forms.CharField(required=False)
+    role = forms.CharField(required=False)
+    promoter = forms.CharField(required=False)
+    city = forms.CharField(required=False)
     engagement_type = forms.CharField(required=False)
-    status = forms.ChoiceField(choices=EVENT_STATUS)
-    fee = forms.DecimalField(max_digits=6, decimal_places=2)
-    role = forms.CharField(max_length=100)
+    contact = forms.CharField(required=False)
+
+    status = forms.ChoiceField(choices=EVENT_STATUS, required=False)
+    fee = forms.DecimalField(max_digits=6, decimal_places=2, required=False)
     visible_to_artist = forms.BooleanField(required=False)
     another_agency = forms.BooleanField(required=False)
+
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = Contact
+        fields = "__all__"

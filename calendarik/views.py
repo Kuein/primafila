@@ -8,11 +8,12 @@ from django.contrib.postgres.expressions import ArraySubquery
 from django.db.models.functions import JSONObject
 from django.db.models import OuterRef
 from django.http import JsonResponse
+from django.db.models import Q
 from django_generate_series.models import generate_series
-from calendarik.models import CalendarEvent, Contact, Artist, Opera, Role, Promoter, LastSession, Event
+from calendarik.models import CalendarEvent, Contact, Artist, Opera, Role, Promoter, LastSession, Event, City
 from django.contrib.auth.decorators import login_required
 from dateutil.relativedelta import relativedelta
-from .forms import SearchForm, TravelForm, OtherForm, EngagementForm
+from .forms import SearchForm, TravelForm, OtherForm, EngagementForm, ContactForm
 from dateutil.rrule import rrule, DAILY
 
 # Create your views here.
@@ -24,14 +25,12 @@ def homepage(request):
     if last_session:
         date = last_session.date
         artists = last_session.artists
-    if not artists:
-        user_groups = request.user.groups.all()
-        if not user_groups or user_groups[0].name.lower() == "artist":
-            artists = (request.user.id,)
-        else:
-            is_artists = request.GET.get("artist")
-            if is_artists:
-                artists = [int(x) for x in request.GET.get("artist").split(",")]
+    is_artists = request.GET.get("artist")
+    if is_artists:
+        artists = [int(x) for x in request.GET.get("artist").split(",")]
+    user_groups = request.user.groups.all()
+    if not user_groups or user_groups[0].name.lower() == "artist":
+        artists = (request.user.id,)
     if not date:
         date = request.GET.get("date", datetime.date.today())
     # get all events for selected artists
@@ -120,16 +119,26 @@ def edit_event(request):
         event_id = request.GET.get("id")
         event = CalendarEvent.objects.get(id=event_id)
         # TODO: select form depends on type of event
-        if event.event_type == "travel":
-            form = TravelForm(instance=event)
-        elif event.event_type == "engagement":
-            form = EngagementForm(instance=event)
+        if event.event.event_type == "travel":
+            form = TravelForm()
+            template = "../templates/travel.html"
+        elif event.event.event_type == "engagement":
+            template="../templates/engagement.html"
+            form = EngagementForm()
         else:
-            form = OtherForm(instance=event)
-        return render(request, "../templates/edit_event.html", {"form": form})
+            template = "../templates/other.html"
+            form = OtherForm()
+        return render(request, template, {"form": form, "instance": event})
     else:
         event_id = request.POST.get("event_id")
-        form = CalendarEventForm(request.POST)
+        event = CalendarEvent.objects.get(id=event_id)
+        # TODO: select form depends on type of event
+        if event.event.event_type == "travel":
+            form = TravelForm(request.POST)
+        elif event.event.event_type == "engagement":
+            form = EngagementForm(request.POST)
+        else:
+            form = OtherForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("/")
@@ -148,7 +157,8 @@ def get_artists_from_session(user):
 
 def create_context(form, request):
     start_date = request.GET.get("date")
-    context = {"form": form, "start_date": start_date, "artists": get_artists_from_session(request.user)}
+    all_cities = City.objects.only("name").all()
+    context = {"form": form, "start_date": start_date, "all_cities": all_cities, "artists": get_artists_from_session(request.user)}
     return context
 
 
@@ -161,6 +171,7 @@ def fill_calendar(event, periods):
                 artist=event.artist,
                 status=event.status,
                 title=event.title,
+                engagement_type=period[2] if len(period) > 2 else None,
             )
 
 def separate_form_data(request, form):
@@ -173,7 +184,8 @@ def separate_form_data(request, form):
                 season_end = season_start
             else:
                 season_end = datetime.datetime.strptime(season_end, "%Y-%m-%d").date()
-            periods.append((season_start, season_end))
+            event_type = request.POST.get(f"event_type_{i}",None)
+            periods.append((season_start, season_end, event_type))
     happening = form.cleaned_data.pop("happening")
     artist = Artist.objects.get(id=form.cleaned_data.pop("artist"))
     return periods, happening, artist
@@ -191,20 +203,42 @@ def event(request):
         event_type= 2
         template = "../templates/travel.html"
     else:
-        form_type = EventForm
+        form_type = EngagementForm
         event_type=4
-        template = "../templates/event.html"
+        template = "../templates/engagement.html"
     context = create_context(form_type(), request)
     if request.method == "POST":
         form = form_type(request.POST)
         if form.is_valid():
             periods, happening, artist = separate_form_data(request, form)
-            inner_files = request.FILES.getlist("inner_files")
-            artist_files = request.FILES.getlist("artist_files")
+#            inner_files = request.FILES.getlist("inner_files")
+#            artist_files = request.FILES.getlist("artist_files")
             _ = form.cleaned_data.pop("inner_files")
             _ = form.cleaned_data.pop("artist_files")
+            _ = form.cleaned_data.pop("engagement_type", None)
+            if form.cleaned_data.get("city","") != "":
+                form.cleaned_data["city"] = City.objects.get_or_create(name=form.cleaned_data["city"])[0]
+            else:
+                form.cleaned_data["city"] = None
+            if form.cleaned_data.get("opera","") != "":
+                form.cleaned_data["opera"] = Opera.objects.get_or_create(title=form.cleaned_data["opera"])[0]
+            else:
+                form.cleaned_data["opera"] = None
+            if form.cleaned_data.get("role","") != "":
+                form.cleaned_data["role"] = Role.objects.get_or_create(name=form.cleaned_data["role"], opera=form.cleaned_data["opera"])[0]
+            else:
+                form.cleaned_data["role"] = None
+            if form.cleaned_data.get("promoter","") != "":
+                form.cleaned_data["promoter"] = Promoter.objects.get_or_create(name=form.cleaned_data["promoter"])[0]
+            else:
+                form.cleaned_data["promoter"] = None
+            if form.cleaned_data.get("contact","") != "":
+                form.cleaned_data["contact"] = Contact.objects.get_or_create(name=form.cleaned_data["contact"])[0]
+            else:
+                form.cleaned_data["contact"] = None
             event = Event.objects.create(**form.cleaned_data)
             event.artist = artist
+            event.last_edited = f"{request.user.username} {datetime.datetime.now()}"
             event.event_type = event_type
             if happening:
                 event.status = "happening"
@@ -213,3 +247,22 @@ def event(request):
             return redirect("/")
     return render(request, template, context)
 
+@login_required
+def contact_list(request):
+    if request.method == "POST":
+        query = request.POST.get("query", "")
+        contacts = Contact.objects.filter(Q(name__icontains=query) | Q(email__icontains=query) | Q(phone__icontains=query) | Q(position__icontains=query) | Q(organization__name__icontains=query)).all()
+    else:
+        contacts = Contact.objects.all()
+    return render(request, "../templates/contact_list.html", {"contacts": contacts})
+
+@login_required
+def contact(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("/contact_list")
+    else:
+        form = ContactForm()
+    return render(request, "../templates/contact.html", {"form": form})
