@@ -1,14 +1,14 @@
-from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
 
 class City(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
+
 
 class Promoter(models.Model):
     name = models.CharField(max_length=100)
@@ -26,9 +26,11 @@ class Contact(models.Model):
     organization = models.ForeignKey(
         Promoter, on_delete=models.SET_NULL, null=True, blank=True
     )
+    notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.name}"
+
 
 class LastSession(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
@@ -39,8 +41,6 @@ class LastSession(models.Model):
         return f"{self.user}"
 
 
-
-
 class Artist(models.Model):
     name = models.CharField(max_length=100)
     calendar = models.BooleanField(default=False)
@@ -48,7 +48,6 @@ class Artist(models.Model):
 
     def __str__(self):
         return self.name
-
 
 
 class Opera(models.Model):
@@ -89,8 +88,12 @@ class Event(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     artist_notes = models.TextField(null=True, blank=True)
     inner_notes = models.TextField(null=True, blank=True)
-    artist_files = models.ManyToManyField("ArtistFiles", blank=True, related_name="artist_files")
-    inner_files = models.ManyToManyField("InnerFiles", blank=True, related_name="inner_files")
+    artist_files = models.ManyToManyField(
+        "ArtistFiles", blank=True, related_name="artist_files"
+    )
+    inner_files = models.ManyToManyField(
+        "InnerFiles", blank=True, related_name="inner_files"
+    )
     event_type = models.IntegerField(choices=EVENT_TYPES, default=3)
     # travel fields
     travel_type = models.IntegerField(choices=TRAVEL_TYPE, null=True, blank=True)
@@ -130,11 +133,11 @@ class Event(models.Model):
 
     def save(self, *arg, **kwargs):
         if self.event_type == 2:
-            if self.travel_type in (1, '1'):
+            if self.travel_type in (1, "1"):
                 self.title = f"✈️ {self.city}"
-            elif self.travel_type in (2, '2'):
+            elif self.travel_type in (2, "2"):
                 self.title = f"{self.city} ✈️"
-            elif self.travel_type in (3, '3'):
+            elif self.travel_type in (3, "3"):
                 self.title = f"🏠 {self.city}"
         if not self.title:
             self.title = f"{self.city} - {self.opera}"
@@ -149,7 +152,6 @@ class Event(models.Model):
         super().save(*arg, **kwargs)
 
 
-
 class ArtistFiles(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     file = models.FileField(upload_to="artist_files")
@@ -159,15 +161,60 @@ class InnerFiles(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     file = models.FileField(upload_to="inner_files")
 
+
+def get_sentinel_user():
+    return User.objects.get_or_create(username="deleted")[0]
+
+
+HISTORY_STATUS = (
+    ("request", "Request"),
+    ("received", "Received"),
+    ("sent_to_artist", "Sent to artist"),
+    ("sign_by_artist", "Sign by artist"),
+    ("sent_to_promoter", "Sent to promoter"),
+    ("sign_by_promoter", "Sign by promoter"),
+    ("invoiced", "Invoiced"),
+)
+
+
+class EventHistory(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    date = models.DateField()
+    user = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user))
+    status = models.CharField(choices=HISTORY_STATUS, max_length=100)
+
+    def __str__(self):
+        return f"{self.event} - {self.status}"
+
+
 class CalendarEvent(models.Model):
     title = models.CharField(max_length=100, null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
-    date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
-    status = models.CharField(choices=EVENT_STATUS, max_length=100, null=True, blank=True)
     engagement_type = models.IntegerField(
         choices=ENGAGEMENT_TYPE, null=True, blank=True
     )
+    travel_type = models.IntegerField(choices=TRAVEL_TYPE, null=True, blank=True)
+    note = models.TextField(null=True, blank=True)
+    happend = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.title
+        if self.title:
+            return self.title
+        else:
+            return "No title"
+
+    def save(self, *args, **kwargs):
+        if not self.title and self.event is None:
+            self.title = f"{self.note:30}"
+        if self.event:
+            self.artist = self.event.artist
+        if self.travel_type in (1, "1"):
+            self.title = f"✈️ {self.event.city}"
+        elif self.travel_type in (2, "2"):
+            self.title = f"{self.event.city} ✈️"
+        elif self.travel_type in (3, "3"):
+            self.title = f"🏠 {self.event.city}"
+        super().save(*args, **kwargs)

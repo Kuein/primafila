@@ -1,0 +1,43 @@
+
+		<div class="row">
+		<div class="col">
+			<select class="form-select" name='travel_type'>
+				<option value="1" selected>Travel to</option>
+				<option value="2">Travel from</option>
+				<option value="3">Hotel</option>
+				</select>
+			<p>Dates</p>
+			<p class="dataset input-group" >
+			<input class="form-control" onchange="correct_date()" type="date" name="event_start_0" value="{{start_date}}" required>
+			<input class="form-control"type="date" min={{start_date}} name="event_end_0">
+				<span class="input-group-text" onClick="add_dataset()">+</span>
+			<span class="input-group-text" type="button" onClick="remove_dataset()">-</span></p>
+		</div>
+		<div class="col">
+				<label>City</label><input class="form-control" list="cities_list" name="city">
+				<datalist id="cities_list">
+				{% for cit in all_cities %}
+				<option value="{{cit}}">{{cit}}</option>
+				{% endfor %}
+				</datalist>
+			<p><label>Notes</label><textarea class="form-control" name="notes"></textarea></p>
+			<p><label>Files</label><input class="form-control" type="file" name="files"></p>
+		</div>
+		{% if request.user|has_group:'Admin' %}
+		<div class="col">
+			<div class="form-check">
+			<input id="happens" class="form-check-input" type="checkbox" name="happening"><label>Will happen</label>
+			</div>
+			
+			<label>Artist:</label><select class="form-select" name="artist">
+				{% for artist in artists %}
+					<option value="{{ artist.0 }}">{{ artist.1 }}</option>
+				{% endfor %}
+				</select>
+			<p><label>Inner notes</label><textarea class="form-control" name="inner_notes"></textarea></p>
+			<p><label>Inner files</label><input class="form-control" type="file" name="inner_files"></p>
+		<input type="submit" value="Submit" />
+		</div>
+		{% endif %}
+	</div>
+	</form>

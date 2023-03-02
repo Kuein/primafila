@@ -13,7 +13,7 @@ from django_generate_series.models import generate_series
 from calendarik.models import CalendarEvent, Contact, Artist, Opera, Role, Promoter, LastSession, Event, City
 from django.contrib.auth.decorators import login_required
 from dateutil.relativedelta import relativedelta
-from .forms import SearchForm, TravelForm, OtherForm, EngagementForm, ContactForm
+from .forms import SearchForm, TravelForm, OtherForm, EngagementForm, ContactForm, TravelDataSet,EngagementDataSet, EngagementHistorySet
 from dateutil.rrule import rrule, DAILY
 
 # Create your views here.
@@ -35,26 +35,30 @@ def homepage(request):
         date = request.GET.get("date", datetime.date.today())
     # get all events for selected artists
     begin_of_month = datetime.date(date.year, date.month, 1)
-    six_months = begin_of_month + relativedelta(months=+6)
+    six_months = begin_of_month + relativedelta(months=+5)
     six_months = six_months.replace(
         day=calendar.monthrange(six_months.year, six_months.month)[1]
     )
+#    seq = rrule(DAILY, dtstart=begin_of_month, until=six_months)
+#    for dt in seq:
+#        CalendarEvent.objects.filter(get_or_create(date=dt)
     # enrich results with data in template
     event_query = CalendarEvent.objects.filter(
-        date=OuterRef("term"), artist__id__in=artists
+           start_date__lte=OuterRef("term"), end_date__gte=OuterRef("term")).filter(Q(artist__id__in=artists) | Q(event__isnull=True)
     ).values(
         json=JSONObject(
             event_id="id",
             event_title="title",
-            status="status",
+            status="event__status",
             artist="artist__id",
+            happend="happend",
         )
     )
     query = generate_series(
         begin_of_month, six_months, "1 day", output_field=models.DateField
     ).annotate(events=ArraySubquery(event_query))
     query = groupby(query, lambda x: x.term.strftime("%Y-%m"))
-    query = [(x[0], list(x[1])) for x in query][:-1]
+    query = [(x[0], list(x[1])) for x in query]
     periods = [x[0] for x in query]
     query = zip_longest(*[x[1] for x in query], fillvalue=None)
     art_query = Artist.objects.filter(calendar=True).values("name").all()
@@ -113,34 +117,59 @@ def get_roles(request):
         roles = Role.objects.filter(opera__title__icontains=opera_id).values("name").all()
         return JsonResponse(list(roles), safe=False)
 
-@login_required
-def edit_event(request):
-    if request.method == "GET":
-        event_id = request.GET.get("id")
-        event = CalendarEvent.objects.get(id=event_id)
-        # TODO: select form depends on type of event
-        if event.event.event_type == "travel":
-            form = TravelForm()
-            template = "../templates/travel.html"
-        elif event.event.event_type == "engagement":
-            template="../templates/engagement.html"
-            form = EngagementForm()
-        else:
-            template = "../templates/other.html"
-            form = OtherForm()
-        return render(request, template, {"form": form, "instance": event})
-    else:
-        event_id = request.POST.get("event_id")
-        event = CalendarEvent.objects.get(id=event_id)
-        # TODO: select form depends on type of event
-        if event.event.event_type == "travel":
-            form = TravelForm(request.POST)
-        elif event.event.event_type == "engagement":
-            form = EngagementForm(request.POST)
-        else:
-            form = OtherForm(request.POST)
+def travel(request):
+    if request.method == "POST":
+        form = TravelForm(request.POST)
+        formset = {}
         if form.is_valid():
             form.save()
+            formset = TravelDataSet(request.POST, instance=form.instance)
+            if formset.is_valid():
+                formset.save()
+            return redirect("/")
+    else:
+        form = TravelForm()
+        formset = TravelDataSet()
+    return render(request, "../templates/travel.html", {"form": form, "formset": formset})
+
+@login_required
+def edit_event(request):
+    event_id = int(request.GET.get("id", 0))
+    event = CalendarEvent.objects.get(pk=event_id)
+    historyformset = {}
+    if request.method == "GET":
+        if event.event is None:
+            form = OtherForm(instance=event)
+            template = "../templates/other.html"
+            formset = {}
+        # TODO: select form depends on type of event
+        elif event.event.event_type == 3:
+            form = TravelForm(instance=event.event)
+            formset = TravelDataSet(instance=event.event)
+            template = "../templates/travel.html"
+        elif event.event.event_type == 4:
+            template="../templates/engagement.html"
+            form = EngagementForm()
+            formset = EngagementDataSet(instance=event.event)
+            historyformset = EngagementHistorySet(instance=event.event)
+        return render(request, template, {"form": form, "formset": formset, "historyformset": historyformset})
+    else:
+        # TODO: select form depends on type of event
+        if event.event is None:
+            form = OtherForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+                return redirect("/")
+        if event.event.event_type == 3:
+            form = TravelForm(request.POST, instance=event.event)
+            formset = TravelDataSet
+        elif event.event.event_type == 4:
+            form = EngagementForm(request.POST, instance=event.event)
+        if form.is_valid():
+            form.save()
+            formset = formset(request.POST, instance=event.event)
+            if formset.is_valid():
+                formset.save()
             return redirect("/")
         else:
             return render(request, "../templates/edit_event.html", {"form": form})
@@ -189,6 +218,17 @@ def separate_form_data(request, form):
     happening = form.cleaned_data.pop("happening")
     artist = Artist.objects.get(id=form.cleaned_data.pop("artist"))
     return periods, happening, artist
+
+@login_required
+def other_event(request):
+    if request.method == "POST":
+        form = OtherForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("/")
+    else:
+        form = OtherForm(initial={"date": request.GET.get("date")})
+    return render(request, "../templates/other.html", {"form": form, "date": request.GET.get("date")})
 
 
 @login_required

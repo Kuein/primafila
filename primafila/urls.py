@@ -29,7 +29,7 @@ urlpatterns = [
     path("edit_event", views.edit_event, name="edit_event"),
     path("contact", views.contact, name="contact"),
     path("contact_list", views.contact_list, name="contact_list"),
-#    path("travel", views.travel, name="travel"),
-#    path("other", views.other, name="other"),
+    path("travel", views.travel, name="travel"),
+    path("other", views.other_event, name="other"),
 #    path("engagement", views.engagement, name="engagement"),
 ]
