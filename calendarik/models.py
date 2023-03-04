@@ -35,7 +35,9 @@ class Contact(models.Model):
 class LastSession(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     date = models.DateField(null=True, blank=True)
-    artists = ArrayField(base_field=models.IntegerField(null=True, blank=True))
+    artists = ArrayField(
+        base_field=models.IntegerField(null=True, blank=True), null=True, blank=True
+    )
 
     def __str__(self):
         return f"{self.user}"
@@ -51,8 +53,7 @@ class Artist(models.Model):
 
 
 class Opera(models.Model):
-    title = models.CharField(max_length=100)
-    description = models.TextField(null=True, blank=True)
+    name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.title
@@ -117,9 +118,6 @@ class Event(models.Model):
     fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     visible_to_artist = models.BooleanField(default=False)
     another_agency = models.BooleanField(default=False)
-    engagement_type = models.IntegerField(
-        choices=ENGAGEMENT_TYPE, null=True, blank=True
-    )
     travel_payment_type = models.IntegerField(
         choices=TRAVEL_PAY_TYPE, null=True, blank=True
     )
@@ -147,8 +145,6 @@ class Event(models.Model):
             self.title = self.title[:-4]
         if self.visible_to_artist or not self.status:
             self.status = "inner"
-        if self.engagement_type == 1:
-            self.title = self.title.upper()
         super().save(*arg, **kwargs)
 
 
@@ -192,7 +188,7 @@ class CalendarEvent(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
+    #    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True, blank=True)
     engagement_type = models.IntegerField(
         choices=ENGAGEMENT_TYPE, null=True, blank=True
     )
@@ -207,10 +203,12 @@ class CalendarEvent(models.Model):
             return "No title"
 
     def save(self, *args, **kwargs):
+        if self.end_date is None:
+            self.end_date = self.start_date
+        if self.engagement_type == 1:
+            self.title = self.title.upper()
         if not self.title and self.event is None:
             self.title = f"{self.note:30}"
-        if self.event:
-            self.artist = self.event.artist
         if self.travel_type in (1, "1"):
             self.title = f"✈️ {self.event.city}"
         elif self.travel_type in (2, "2"):

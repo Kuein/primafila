@@ -12,7 +12,7 @@
       border: none;
       text-align: center;
    }
-table {
+.table-calendar {
 font-size: 10px;
   border-collapse: collapse;
   table-layout: fixed;
@@ -71,11 +71,11 @@ font-size: 10px;
   background-color: #f5f5f5;
 }
 
-td {
+.td-calendar {
   text-align: left;
   border: 1px solid #dddddd;
 }
-th {
+.th-calendar {
 text-align: center;
 }
 	</style>
@@ -87,6 +87,13 @@ text-align: center;
             <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                 <span class="navbar-toggler-icon"></span>
             </button>
+	    <div class="container-sm">
+		    <a href="/?date={{year_ago|date:"Y-m-d"}}">-12</a>
+		    <a href="/?date={{six_months_ago|date:"Y-m-d"}}">-6</a>
+		    <a href="/?date={{today|date:"Y-m-d"}}">Today</a>
+		    <a href="/?date={{six_months_ahead|date:"Y-m-d"}}">+6</a>
+		    <a href="/?date={{year_ahead|date:"Y-m-d"}}">+12</a>
+	    </div>
 	    <div class="navbar-nav ms-auto">
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav">
@@ -96,8 +103,18 @@ text-align: center;
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Artists</a>
                         <div class="dropdown-menu">
+				<a href="/?artist=1000" class="dropdown-item">Premiere</a>
 				{% for artist in all_artists %}
-				<a href="#" class="dropdown-item">{{artist.name}}</a>
+				<a href="/?artist={{artist.0}}" class="dropdown-item">{{artist.1}}</a>
+				{% endfor %}
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Artists</a>
+                        <div class="dropdown-menu">
+				<a href="/?artist=1000" class="dropdown-item">Premiere</a>
+				{% for artist in all_artists %}
+				<a href="/?artist={{artist.0}}" class="dropdown-item">{{artist.1}}</a>
 				{% endfor %}
                         </div>
                     </div>
@@ -145,44 +162,42 @@ window.addEventListener("contextmenu", e => {
     }
 });
 	function correct_date() {
-		var dataset = document.getElementsByClassName("dataset");
-		for (var i = 0; i < dataset.length; i++) {
-			var start = dataset[i].childNodes[2].value;
-			console.log(dataset[i].childNodes[4]);
-			dataset[i].childNodes[4].setAttribute("min", start);
+		var ps = document.getElementsByClassName("period-start");
+		var pe = document.getElementsByClassName("period-end");
+		if (ps[0].value == "") {
+			ps[0].value = "{{start_date}}";
 		}
-	}
-	function add_dataset() {
+		for (var i = 0; i < ps.length; i++) {
+			var start = ps[i].value;
+			pe[i].min = start;
+			}
+		}
+	
+	function add_dataset(formId) {
 		var dataset = document.getElementsByClassName("dataset");
 		var new_dataset = dataset[0].cloneNode(true);
 		for (var i = 0; i < new_dataset.childNodes.length; i++) {
-			var child = new_dataset.childNodes[i];
-			if (child.name == undefined) {
+			var child = new_dataset.childNodes[i].childNodes[0];
+			if (child==undefined || child.name == undefined) {
 				continue;
 			}
-			if (child.name.includes("event_start")) {
-				child.name = "event_start_" + dataset.length;
-			}
-			if (child.name.includes("event_end")) {
-				child.name = "event_end_" + dataset.length;
-			}
+			child.name = child.name.replace("0", dataset.length);
 		}
 		dataset[0].parentNode.appendChild(new_dataset);
-		document.getElementById("id_form-TOTAL_FORMS").value = dataset.length;
+		document.getElementById(formId).value = dataset.length;
 	}
-	function remove_dataset() {
+	function remove_dataset(formId) {
 		var dataset = document.getElementsByClassName("dataset");
 		if (dataset.length > 1) {
 			dataset[0].parentNode.removeChild(dataset[dataset.length - 1]);
-		document.getElementById("id_form-TOTAL_FORMS").value = dataset.length;
+		document.getElementById(formId).value = dataset.length;
 		}
 	}
-		document.getElementById("opera").addEventListener("change", function() {
+	function correct_role() {
 			var opera_value = document.getElementById("opera").value;
 			const url = "/get_roles?opera="+opera_value;
 			fetch(url)
 			.then((resp) => resp.json()).then(function(data) {
-				console.log(data);
 				var role_list = document.getElementById("roles_list");
 				role_list.innerHTML = "";
 				for (var i = 0; i < data.length; i++) {
@@ -192,7 +207,22 @@ window.addEventListener("contextmenu", e => {
 				}
 			});
 			document.getElementById("role").value = "";
-		});
+		};
+	     function correct_city() {
+		     var city_input = document.getElementById("id_city");
+		     var city_value = document.getElementById("city");
+		     for (var i = 0; i < city_value.children.length; i++) {
+			     if (city_value.children[i].selected) {
+				     console.log(city_value.children[i]);
+				     console.log(city_value.children[i].value);
+				     city_input.value = city_value.children[i].value;
+			     }
+		     }
+		     };
+	     window.onload = function() {
+		     correct_date();
+		     correct_city();
+	     }
 </script>
 	     </script>
 	</body>
