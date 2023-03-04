@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-	<table class="table-calendar"><thead><tr>
+	<table class="table-calendar table table-responsive table-sm"><thead><tr>
 				{% for period in periods %}
 				<th class="calendar_date"></th>
-				<th class="calendar_event" text-align="center">{{period}}</th>
+				<th class="calendar_event">{{period}}</th>
 				{% endfor %}
 			</tr></thead><tbody>
 					{% for item in data %}
 					<tr>
 						{% for tuple in item %}
 						{% with weekday=tuple.term|date:"w" %}
-						<td class="calendar_date td-calendar" {% if weekday == "0" %}style="color: red"{%endif%}{%endwith%}>{{tuple.term|date:"d"}}<br>{{tuple.term|date:"l"|slice:":2"}}</td><td id="{{tuple.term|date:'c'}}" class="calendar_event td-calendar">{% for event in tuple.events %}
-							<p class={{event.status}}><a href="/edit_event?id={{event.event_id}}">{{event.event_title}}</a></p>
+						<td class="td-calendar calendar_date" {% if weekday == "0" %}style="color: red"{%endif%}{%endwith%}>{{tuple.term|date:"d"}}<br>{{tuple.term|date:"l"|slice:":2"}}</td>
+						<td id="{{tuple.term|date:'c'}}" class="calendar_event td-calendar">{% for event in tuple.events %}
+							<p><a class="{{event.status}}" href="/edit_event?id={{event.event_id}}">{{event.event_title}}</a></p>
 						{% endfor %}</td>
 						{% endfor %}
 					</tr>
@@ -23,5 +24,42 @@
 	     <p><a class="menu-option" id="menu-travel" href="">Travel</a></p>
 	     <p><a class="menu-option" id="menu-other" href="">Other</a></p>
 	     <p><a class="menu-option" id="menu-engagement" href="">Engagement</a></p>
-</div>
+	</div>
+	     <script>
+
+	     const menu = document.querySelector(".menu");
+const menuOption = document.querySelector(".menu-option");
+let menuVisible = false;
+
+const toggleMenu = command => {
+  menu.style.display = command === "show" ? "block" : "none";
+  menuVisible = !menuVisible;
+};
+
+const setPosition = ({ top, left }) => {
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  toggleMenu("show");
+};
+
+window.addEventListener("click", e => {
+  if (menuVisible) toggleMenu("hide");
+});
+
+window.addEventListener("contextmenu", e => {
+	var targetElement = event.target
+	var event_date = targetElement.id
+    if (targetElement.nodeName === "TD") {
+  e.preventDefault();
+  const origin = {
+    left: e.pageX,
+    top: e.pageY
+  };
+	document.getElementById("menu-travel").href = "/travel?date=" + event_date;
+	document.getElementById("menu-other").href = "/other?date=" + event_date;
+	document.getElementById("menu-engagement").href = "/engagement?date=" + event_date;
+  setPosition(origin);
+    }
+});
+</script>
 {% endblock %}

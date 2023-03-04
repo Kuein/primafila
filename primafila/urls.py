@@ -25,11 +25,11 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("search", views.search, name="search"),
     path("get_roles", views.get_roles, name="get_roles"),
-    path("event", views.event, name="event"),
+#    path("event", views.event, name="event"),
     path("edit_event", views.edit_event, name="edit_event"),
     path("contact", views.contact, name="contact"),
     path("contact_list", views.contact_list, name="contact_list"),
     path("travel", views.travel, name="travel"),
     path("other", views.other_event, name="other"),
-#    path("engagement", views.engagement, name="engagement"),
+    path("engagement", views.engagement, name="engagement"),
 ]

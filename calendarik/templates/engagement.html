@@ -2,27 +2,49 @@
 {% load has_group %}
 {% load static %}
 {% block content %}
+<div class="row">
+<div class="col-md-1"></div>
+<div class="col-md-10 justify-content-center">
 	<form class="form-horizontal" method="post">
+		{{form.event_type}}
 		{% csrf_token %}
+			<table class="table table-sm table-responsive table-borderless">
 		{{ formset.management_form }}
+		<tr><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td></td></tr>
 		{% for form in formset %}
-		<div class="col">
-			<p class="dataset input-group">
-			{{form.id}}
-			{{form.engagement_type}}
-			{{form.date}}
-			{{form.end_date}}
-			{{form.note}}
-			<span class="input-group-text" onClick="add_dataset()">+</span>
-			<span class="input-group-text" type="button" onClick="remove_dataset()">-</span></p>
+		<div>
+				<tr class="dataset">
+				{{form.id}}
+					<td>{{form.engagement_type}}</td>
+					<td>{{form.title}}</td>
+					<td onchange="correct_date()">{{form.start_date}}</td>
+					<td>{{form.end_date}}</td>
+					<td>{{form.note}}</td>
+					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_calendarevent_set-TOTAL_FORMS')">+</button>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS')">-</button></td></tr>
 		</div>
 		{% endfor %}
-		{{ form.as_p }}
-		{{ historyformset}}
-		<div class="form-group">
-			<div class="col-sm-offset-2 col-sm-10">
-				<button type="submit" class="btn btn-default">Submit</button>
-			</div>
-		</div>
+			</table>
+		<table class="table table-sm table-responsive table-borderless">
+			<tr><td>Titile</td><td>Opera</td><td>Role</td></tr>
+			<tr><td>{{form.title}}</td><td>{{form.opera}}</td><td>{{form.role}}</td></tr>
+			<tr><td>Status</td><td>Artist</td><td></td></tr>
+			<tr><td>{{form.status}}</td><td>{{form.artist}}</td><td></td></tr>
+			<tr><td>Promoter</td><td>City</td><td></td></tr>
+			<tr><td>{{form.promoter}}</td><td>{{form.city}}</td><td></td></tr>
+			<tr><td>Contact</td><td></td><td></td></tr>
+			<tr><td>{{form.contact}}</td><td></td><td></td></tr>
+		</table>
+		<table class="table table-sm table-borderless table-responsive">
+
+				<tr><td>Notes</td><td>Inner notes</td></tr>
+				<tr><td>{{form.artist_notes}}</td><td>{{form.inner_notes}}</td></tr>
+				<tr><td>Files</td><td>Inner files</td></tr>
+				<tr><td>{{form.artist_files}}</td><td>{{form.inner_files}}</td></tr>
+		</table>
+				<button type="submit" class="btn btn-sm btn-secondary">Submit</button>
 	</form>
+</div>
+<div class="col-md-1"></div>
+</div>
 	{% endblock %}

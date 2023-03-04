@@ -30,9 +30,9 @@ from .forms import (
     EngagementForm,
     ContactForm,
     TravelDataSetForm,
-    EngagementDataSet,
-    EngagementHistorySet,
+    EngagementDataSetForm,
     TravelDataSet,
+    EngagementDataSet,
 )
 from dateutil.rrule import rrule, DAILY
 from django.forms import inlineformset_factory
@@ -181,7 +181,7 @@ def get_roles(request):
         )
         return JsonResponse(list(roles), safe=False)
 
-
+@login_required
 def travel(request):
     formset = {}
     date = request.GET.get("date")
@@ -191,8 +191,8 @@ def travel(request):
             form.save()
             formset = TravelDataSet(request.POST, instance=form.instance)
             if formset.is_valid():
-                for form in formset:
-                    form.save()
+#                CalendarEvent.objects.filter(event=form.instance).delete()
+                formset.save()
             return redirect("/")
     else:
         form = TravelForm()
@@ -212,23 +212,20 @@ def edit_event(request):
             form = OtherForm(instance=event)
             template = "../templates/other.html"
             formset = {}
-        # TODO: select form depends on type of event
         elif event.event.event_type == 3:
             form = TravelForm(instance=event.event)
             formset = TravelDataSet(instance=event.event)
             template = "../templates/travel.html"
         elif event.event.event_type == 4:
             template = "../templates/engagement.html"
-            form = EngagementForm()
+            form = EngagementForm(instance=event.event)
             formset = EngagementDataSet(instance=event.event)
-            historyformset = EngagementHistorySet(instance=event.event)
         return render(
             request,
             template,
             {"form": form, "formset": formset, "historyformset": historyformset},
         )
     else:
-        # TODO: select form depends on type of event
         if event.event is None:
             form = OtherForm(request.POST, instance=event)
             if form.is_valid():
@@ -236,17 +233,29 @@ def edit_event(request):
                 return redirect("/")
         if event.event.event_type == 3:
             form = TravelForm(request.POST, instance=event.event)
-            formset = TravelDataSet
+            if form.is_valid():
+                form.save()
+                formset = TravelDataSet(request.POST, instance=event.event)
+                if formset.is_valid():
+                    all_forms = CalendarEvent.objects.filter(event=event.event).all()
+                    for form in formset:
+                        if form.is_valid():
+                            form.save()
+                            all_forms = all_forms.exclude(pk=form.instance.pk)
+                    all_forms.delete()
         elif event.event.event_type == 4:
             form = EngagementForm(request.POST, instance=event.event)
-        if form.is_valid():
-            form.save()
-            formset = formset(request.POST, instance=event.event)
-            if formset.is_valid():
-                formset.save()
-            return redirect("/")
-        else:
-            return render(request, "../templates/edit_event.html", {"form": form})
+            if form.is_valid():
+                form.save()
+                formset = EngagementDataSet(request.POST, instance=event.event)
+                if formset.is_valid():
+                    all_forms = CalendarEvent.objects.filter(event=event.event).all()
+                    for form in formset:
+                        if form.is_valid():
+                            form.save()
+                            all_forms = all_forms.exclude(pk=form.instance.pk)
+                    all_forms.delete()
+        return redirect("/")
 
 
 def get_artists_from_session(user):
@@ -321,72 +330,25 @@ def other_event(request):
         {"form": form, "date": request.GET.get("date")},
     )
 
-
 @login_required
-def event(request):
-    ttype = request.GET.get("type", "other")
-    if ttype == "other":
-        form_type = OtherForm
-        event_type = 3
-        template = "../templates/other.html"
-    elif ttype == "travel":
-        form_type = TravelForm
-        event_type = 2
-        template = "../templates/travel.html"
-    else:
-        form_type = EngagementForm
-        event_type = 4
-        template = "../templates/engagement.html"
-    context = create_context(form_type(), request)
+def engagement(request):
+    formset = {}
+    date = request.GET.get("date")
     if request.method == "POST":
-        form = form_type(request.POST)
+        form = EngagementForm(request.POST)
+        breakpoint()
         if form.is_valid():
-            periods, happening, artist = separate_form_data(request, form)
-            #            inner_files = request.FILES.getlist("inner_files")
-            #            artist_files = request.FILES.getlist("artist_files")
-            _ = form.cleaned_data.pop("inner_files")
-            _ = form.cleaned_data.pop("artist_files")
-            _ = form.cleaned_data.pop("engagement_type", None)
-            if form.cleaned_data.get("city", "") != "":
-                form.cleaned_data["city"] = City.objects.get_or_create(
-                    name=form.cleaned_data["city"]
-                )[0]
-            else:
-                form.cleaned_data["city"] = None
-            if form.cleaned_data.get("opera", "") != "":
-                form.cleaned_data["opera"] = Opera.objects.get_or_create(
-                    title=form.cleaned_data["opera"]
-                )[0]
-            else:
-                form.cleaned_data["opera"] = None
-            if form.cleaned_data.get("role", "") != "":
-                form.cleaned_data["role"] = Role.objects.get_or_create(
-                    name=form.cleaned_data["role"], opera=form.cleaned_data["opera"]
-                )[0]
-            else:
-                form.cleaned_data["role"] = None
-            if form.cleaned_data.get("promoter", "") != "":
-                form.cleaned_data["promoter"] = Promoter.objects.get_or_create(
-                    name=form.cleaned_data["promoter"]
-                )[0]
-            else:
-                form.cleaned_data["promoter"] = None
-            if form.cleaned_data.get("contact", "") != "":
-                form.cleaned_data["contact"] = Contact.objects.get_or_create(
-                    name=form.cleaned_data["contact"]
-                )[0]
-            else:
-                form.cleaned_data["contact"] = None
-            event = Event.objects.create(**form.cleaned_data)
-            event.artist = artist
-            event.last_edited = f"{request.user.username} {datetime.datetime.now()}"
-            event.event_type = event_type
-            if happening:
-                event.status = "happening"
-            event.save()
-            fill_calendar(event, periods)
+            form.save()
+            formset = EngagementDataSet(request.POST, instance=form.instance)
+            if formset.is_valid():
+                formset.save()
             return redirect("/")
-    return render(request, template, context)
+    else:
+        form = EngagementForm()
+        formset = inlineformset_factory(parent_model=Event, model=CalendarEvent, form=EngagementDataSetForm, extra=1,)
+    return render(
+            request, "../templates/engagement.html", {"form": form, "formset": formset, "start_date": date}
+    )
 
 
 @login_required

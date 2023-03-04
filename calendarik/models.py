@@ -56,7 +56,7 @@ class Opera(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class Role(models.Model):
@@ -205,9 +205,7 @@ class CalendarEvent(models.Model):
     def save(self, *args, **kwargs):
         if self.end_date is None:
             self.end_date = self.start_date
-        if self.engagement_type == 1:
-            self.title = self.title.upper()
-        if not self.title and self.event is None:
+        if self.event is None:
             self.title = f"{self.note:30}"
         if self.travel_type in (1, "1"):
             self.title = f"✈️ {self.event.city}"
@@ -215,4 +213,8 @@ class CalendarEvent(models.Model):
             self.title = f"{self.event.city} ✈️"
         elif self.travel_type in (3, "3"):
             self.title = f"🏠 {self.event.city}"
+        if self.event and self.event.title and not self.title:
+            self.title = self.event.title
+        if self.engagement_type == 1:
+            self.title = self.title.upper()
         super().save(*args, **kwargs)
