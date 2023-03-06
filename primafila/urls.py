@@ -32,4 +32,5 @@ urlpatterns = [
     path("travel", views.travel, name="travel"),
     path("other", views.other_event, name="other"),
     path("engagement", views.engagement, name="engagement"),
+    path("contact/<int:contact_id>", views.edit_contact, name="edit_contact"),
 ]

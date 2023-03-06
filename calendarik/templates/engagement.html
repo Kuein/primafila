@@ -10,30 +10,35 @@
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
 		{{ formset.management_form }}
-		<tr><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td></td></tr>
+		<tr><td></td><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td style="display: none" id="fee-header">Fee</td><td></td></tr>
 		{% for form in formset %}
 		<div>
 				<tr class="dataset">
-				{{form.id}}
+					<td>{{form.id}}</td>
 					<td>{{form.engagement_type}}</td>
 					<td>{{form.title}}</td>
 					<td onchange="correct_date()">{{form.start_date}}</td>
 					<td>{{form.end_date}}</td>
 					<td>{{form.note}}</td>
+					<td><div class="input-group formset-fee" style="display: none">{{form.fee}}<span class="input-group-text" style="padding:0">{{form.currency}}</span></div></td>
 					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_calendarevent_set-TOTAL_FORMS')">+</button>
-						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS')">-</button></td></tr>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS', this)">-</button></td></tr>
 		</div>
 		{% endfor %}
 			</table>
-		<table class="table table-sm table-responsive table-borderless">
+		<table class="table table-sm table-responsive table-borderless primafila-table">
 			<tr><td>Titile</td><td>Opera</td><td>Role</td></tr>
 			<tr><td>{{form.title}}</td><td>{{form.opera}}</td><td>{{form.role}}</td></tr>
-			<tr><td>Status</td><td>Artist</td><td></td></tr>
-			<tr><td>{{form.status}}</td><td>{{form.artist}}</td><td></td></tr>
-			<tr><td>Promoter</td><td>City</td><td></td></tr>
-			<tr><td>{{form.promoter}}</td><td>{{form.city}}</td><td></td></tr>
-			<tr><td>Contact</td><td></td><td></td></tr>
-			<tr><td>{{form.contact}}</td><td></td><td></td></tr>
+			<tr><td>Status</td><td>Artist</td><td>Regie</td></tr>
+			<tr><td>{{form.status}}</td><td>{{form.artist}}</td><td>{{form.regie}}</td></tr>
+			<tr><td>Promoter</td><td>City</td><td>Dirigent</td></tr>
+			<tr><td>{{form.promoter}}</td><td>{{form.city}}</td><td>{{form.dirigent}}</td></tr>
+			<tr><td>Contact</td><td>Fee</td><td></td></tr>
+			<tr><td>{{form.contact}}</td><td><div class="input-group">{{form.fee}}<span class="input-group-text" style="padding: 0">{{form.fee_currency}}</span></div>
+					<p style="justify-content: space-between; display: flex"><span onclick="split_fee()">{{form.calculated_fee}} all in</span><span onclick="individual_fee()">{{form.individual_fee}} individual fee</span></p>
+					<div class="input-group indifee" style="display: none">{{form.travel_fee}}<span class="input-grop-text" style="padding: 0">{{form.travel_fee_type}}</span></div>
+					<div class="input-group indifee" style="display: none">{{form.accomodation_fee}}<span class="input-grop-text" style="padding: 0">{{form.accomodation_fee_type}}</span></div>
+				</td><td></td></tr>
 		</table>
 		<table class="table table-sm table-borderless table-responsive">
 
@@ -47,4 +52,64 @@
 </div>
 <div class="col-md-1"></div>
 </div>
+<script>
+	function split_fee() {
+		var calculated_fee = document.getElementById("id_calculated_fee");
+			var splitter = document.getElementsByClassName("indifee");
+		if (calculated_fee.checked == true) {
+			for (var i = 0; i < splitter.length; i++) {
+				splitter[i].style.display = "none";
+				splitter[i].childNodes.forEach(node => {
+					node.value = "";
+				});
+			}
+		}
+		else {
+			for (var i = 0; i < splitter.length; i++) {
+				splitter[i].style.display = "inline-flex";
+			}
+		}}
+	function individual_fee() {
+		var individual_fee = document.getElementById("id_individual_fee");
+		var splitter = document.getElementsByClassName("formset-fee");
+		var head = document.getElementById("fee-header");
+		if (individual_fee.checked == true) {
+			head.style.display = "inline";
+			for (var i = 0; i < splitter.length; i++) {
+				splitter[i].style.display = "inline-flex";
+			}
+		}
+		else {
+			head.style.display = "none";
+			for (var i = 0; i < splitter.length; i++) {
+				splitter[i].style.display = "none";
+				splitter[i].childNodes.forEach(node => {
+					node.value = "";
+				});
+			}
+		}
+	}
+	function get_role() {
+		console.log("get_role");
+			var opera_value = document.getElementById("id_opera").value;
+			const url = "/get_roles?opera="+opera_value;
+			fetch(url)
+			.then((resp) => resp.json()).then(function(data) {
+				var role_list = document.getElementById("role");
+				role_list.innerHTML = "";
+				for (var i = 0; i < data.length; i++) {
+					var option = document.createElement("option");
+					option.value = data[i].name;
+					role_list.appendChild(option);
+				}
+			});
+			document.getElementById("id_role").value = "";
+		};
+	function individual_onload() {
+		split_fee();
+		individual_fee();
+		console.log("onload");
+		document.getElementById("id_opera").addEventListener("change", get_role);
+	}
+	</script>
 	{% endblock %}

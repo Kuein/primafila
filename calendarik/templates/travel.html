@@ -9,17 +9,17 @@
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
 		{{ formset.management_form }}
-				<tr><td>Travel type</td><td>Start date</td><td>End date</td><td>Note</td><td></td></tr>
+		<tr><td></td><td>Travel type</td><td>Start date</td><td>End date</td><td>Note</td><td></td></tr>
 		{% for form in formset %}
 		<div>
 				<tr class="dataset">
-				{{form.id}}
+					<td>{{form.id}}</td>
 					<td>{{form.travel_type}}</td>
 					<td onchange="correct_date()">{{form.start_date}}</td>
 					<td>{{form.end_date}}</td>
 					<td>{{form.note}}</td>
 					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_calendarevent_set-TOTAL_FORMS')">+</button>
-						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS')">-</button></td></tr>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS', {{form.id}})">-</button></td></tr>
 		</div>
 		{% endfor %}
 			</table>

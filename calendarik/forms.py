@@ -139,6 +139,12 @@ class TravelForm(forms.ModelForm):
     city = CityChoiceField(widget=Datalist(attrs={"class": "form-control"}))
     event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=4)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["city"].widget.choices = City.objects.values_list(
+            "id", "name"
+        ).all()
+
     class Meta:
         model = Event
         fields = (
@@ -162,7 +168,15 @@ class TravelForm(forms.ModelForm):
 class EngagementDataSetForm(forms.ModelForm):
     class Meta:
         model = CalendarEvent
-        fields = ("start_date", "note", "engagement_type", "end_date", "title")
+        fields = (
+            "start_date",
+            "note",
+            "engagement_type",
+            "end_date",
+            "title",
+            "fee",
+            "currency",
+        )
         widgets = {
             "start_date": forms.DateInput(
                 attrs={"type": "date", "class": "form-control period-start"}
@@ -173,6 +187,8 @@ class EngagementDataSetForm(forms.ModelForm):
                 attrs={"type": "date", "class": "form-control period-end"}
             ),
             "title": forms.TextInput(attrs={"class": "form-control"}),
+            "fee": forms.NumberInput(attrs={"class": "form-control"}),
+            "currency": forms.Select(attrs={"class": "form-control"}),
         }
 
 
@@ -182,7 +198,7 @@ class EngagementForm(forms.ModelForm):
         required=False,
     )
     opera = OperaChoiceField(
-            widget=Datalist(attrs={"class": "form-control"}), required=True
+        widget=Datalist(attrs={"class": "form-control"}), required=True
     )
     role = RoleChoiceField(
         widget=Datalist(attrs={"class": "form-control"}), required=False
@@ -195,9 +211,27 @@ class EngagementForm(forms.ModelForm):
     )
     event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=4)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dirigent"].widget.choices = Event.objects.distinct().values_list("dirigent", "dirigent").all()
+        self.fields["regie"].widget.choices = Event.objects.distinct().values_list("regie", "regie").all()
+        self.fields["city"].widget.choices = City.objects.values_list("id", "name").all()
+        self.fields["opera"].widget.choices = Opera.objects.values_list("id", "name").all()
+        self.fields["role"].widget.choices = Role.objects.values_list("id", "name").all()
+        self.fields["promoter"].widget.choices = Promoter.objects.values_list("id", "name").all()
+    
     class Meta:
         model = Event
         fields = (
+            "fee_currency",
+            "calculated_fee",
+            "individual_fee",
+            "travel_fee_type",
+            "travel_fee",
+            "accomodation_fee",
+            "accomodation_fee_type",
+            "regie",
+            "dirigent",
             "city",
             "artist",
             "event_type",
@@ -216,10 +250,25 @@ class EngagementForm(forms.ModelForm):
             "another_agency",
         )
         widgets = {
+            "regie": Datalist(
+                attrs={"class": "form-control"},
+                choices=Event.objects.distinct().values_list("regie", "regie").all(),
+            ),
+            "dirigent": Datalist(
+                attrs={"class": "form-control"},
+                choices=Event.objects.distinct()
+                .values_list("dirigent", "dirigent")
+                .all(),
+            ),
+            "travel_fee_type": forms.Select(attrs={"class": "form-control"}),
+            "accomodation_fee_type": forms.Select(attrs={"class": "form-control"}),
+            "travel_fee": forms.NumberInput(attrs={"class": "form-control"}),
+            "accomodation_fee": forms.NumberInput(attrs={"class": "form-control"}),
+            "fee_currency": forms.Select(attrs={"class": "form-control"}),
             "title": forms.TextInput(attrs={"class": "form-control"}),
             "artist": forms.Select(attrs={"class": "form-control", "required": True}),
-            "inner_notes": forms.Textarea(attrs={"class": "form-control"}),
-            "artist_notes": forms.Textarea(attrs={"class": "form-control"}),
+            "inner_notes": forms.Textarea(attrs={"class": "form-control", "rows": "4"}),
+            "artist_notes": forms.Textarea(attrs={"class": "form-control", "rows": "4"}),
             "inner_files": forms.FileInput(attrs={"class": "form-control"}),
             "artist_files": forms.FileInput(attrs={"class": "form-control"}),
             "status": forms.Select(attrs={"class": "form-control"}),

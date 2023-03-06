@@ -31,6 +31,11 @@ class Contact(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+class Currency(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
 
 class LastSession(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
@@ -78,8 +83,7 @@ EVENT_STATUS = (
 )
 TRAVEL_TYPE = ((1, "Travel to"), (2, "Travel from"), (3, "Hotel"))
 ENGAGEMENT_TYPE = ((1, "Premiere"), (2, "Performance"), (3, "Rehearsal"))
-TRAVEL_PAY_TYPE = ((1, "Per diem"), (2, "Flat fee"), (3, "Mileage"), (4, "Other"))
-ACCOMODATION_TYPE = ((1, "Hotel"), (2, "Airbnb"), (3, "Other"))
+TRAVEL_PAY_TYPE = ((1, "Full"), (2, "Limit"))
 
 
 class Event(models.Model):
@@ -105,6 +109,8 @@ class Event(models.Model):
     contact = models.ForeignKey(
         Contact, on_delete=models.CASCADE, null=True, blank=True
     )
+    regie = models.CharField(max_length=100, null=True, blank=True)
+    dirigent = models.CharField(max_length=100, null=True, blank=True)
     promoter = models.ForeignKey(
         Promoter,
         on_delete=models.CASCADE,
@@ -115,16 +121,23 @@ class Event(models.Model):
     status = models.CharField(
         max_length=100, choices=EVENT_STATUS, null=True, blank=True, default="normal"
     )
-    fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     visible_to_artist = models.BooleanField(default=False)
     another_agency = models.BooleanField(default=False)
-    travel_payment_type = models.IntegerField(
-        choices=TRAVEL_PAY_TYPE, null=True, blank=True
-    )
-    accomodation_type = models.IntegerField(
-        choices=ACCOMODATION_TYPE, null=True, blank=True
-    )
     last_edited = models.CharField(max_length=100, null=True, blank=True)
+
+    fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    fee_currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, blank=True)
+
+    travel_fee_type = models.IntegerField(choices=TRAVEL_PAY_TYPE, null=True, blank=True)
+    travel_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+
+    accomodation_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    accomodation_fee_type = models.IntegerField(choices=TRAVEL_PAY_TYPE, null=True, blank=True)
+
+    calculated_fee = models.BooleanField(default=True)
+    individual_fee = models.BooleanField(default=False)
+
+    total_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -192,6 +205,8 @@ class CalendarEvent(models.Model):
     engagement_type = models.IntegerField(
         choices=ENGAGEMENT_TYPE, null=True, blank=True
     )
+    fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True, blank=True)
     travel_type = models.IntegerField(choices=TRAVEL_TYPE, null=True, blank=True)
     note = models.TextField(null=True, blank=True)
     happend = models.BooleanField(default=False)

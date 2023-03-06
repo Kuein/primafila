@@ -102,6 +102,13 @@ def homepage(request):
             "artists": artists,
         },
     )
+    if 1000 in artists:
+        nice_artists = ["Premiere"]
+    else:
+        nice_artists = []
+    query_artists = Artist.objects.filter(id__in=artists).values_list("name", flat=True)
+    for artist in query_artists:
+        nice_artists.append(artist)
 
     return render(
         request,
@@ -115,7 +122,7 @@ def homepage(request):
             "six_months_ago": six_months_ago,
             "six_months_ahead": six_months,
             "today": datetime.datetime.now(),
-            "artists": artists,
+            "artists": nice_artists,
         },
     )
 
@@ -177,7 +184,7 @@ def get_roles(request):
     if request.method == "GET":
         opera_id = request.GET.get("opera")
         roles = (
-            Role.objects.filter(opera__title__icontains=opera_id).values("name").all()
+            Role.objects.filter(opera__name__icontains=opera_id).values("name").all()
         )
         return JsonResponse(list(roles), safe=False)
 
@@ -336,7 +343,6 @@ def engagement(request):
     date = request.GET.get("date")
     if request.method == "POST":
         form = EngagementForm(request.POST)
-        breakpoint()
         if form.is_valid():
             form.save()
             formset = EngagementDataSet(request.POST, instance=form.instance)
@@ -376,4 +382,16 @@ def contact(request):
             return redirect("/contact_list")
     else:
         form = ContactForm()
+    return render(request, "../templates/contact.html", {"form": form})
+
+@login_required
+def edit_contact(request, contact_id):
+    contact = Contact.objects.get(id=contact_id)
+    if request.method == "POST":
+        form = ContactForm(request.POST, instance=contact)
+        if form.is_valid():
+            form.save()
+            return redirect("/contact_list")
+    else:
+        form = ContactForm(instance=contact)
     return render(request, "../templates/contact.html", {"form": form})

@@ -29,10 +29,10 @@
 				<input type="submit" value="Search">
 
 		</form>
-		<table>
+		<table class="table table-sm table-responsive">
 			<tr><th>Artist</th><th>Date</th><th>Promoter</th><th>Status</th><th>Role</th><th>Opera</th><th>Fee</th></tr>
 			{% for event in results %}
-			<tr><td>{{event.artist}}</td><td>{{event.date}}</td><td>{{event.event.promoter}}</td><td>{{event.status}}</td><td>{{event.event.role}}</td><td>{{event.event.opera}}</td><td>{{event.event.fee}}</td></tr>
+			<tr><td>{{event.event.artist}}</td><td>{{event.date}}</td><td>{{event.event.promoter}}</td><td>{{event.status}}</td><td>{{event.event.role}}</td><td>{{event.event.opera}}</td><td>{{event.event.fee}}</td></tr>
 			{% endfor %}
 			</table>
 			{%endblock%}

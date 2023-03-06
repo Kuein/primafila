@@ -5,16 +5,16 @@
 			{% csrf_token %}
 
 			<div class="input-group">
-				<label class="input-group-text">Search</label><input name="query">
-				<input type="submit" value="Search">
+				<label class="input-group-text">Search</label><input class="form-control" name="query">
+				<input type="submit" class="btn btn-sm btn-secondary" value="Search">
 			</div>
 
 		</form>
-		<a href="/contact">Add contact</a>
-		<table class="table">
-			<tr><th>Name</th><th>Email</th><th>Phone</th><th>Position</th><th>Promoter</th></tr>
+		<a type="button" class="btn btn-sm btn-secondary" href="/contact">Add contact</a>
+		<table class="table table-sm table-responsive">
+			<tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Position</th><th>Promoter</th><th>Notes</th></tr>
 			{% for contact in contacts %}
-			<tr><td>{{contact.name}}</td><td>{{contact.email}}</td><td>{{contact.phone}}</td><td>{{contact.position}}</td><td>{{contact.promoter}}</td></tr>
+			<tr><td><a href="/contact/{{contact.id}}">{{contact.id}}</a><td><a href="/contact/{{contact.id}}">{{contact.name}}</a></td><td><a href="/contact/{{contact.id}}">{{contact.email}}</a></td><td><a href="/contact/{{contact.id}}">{{contact.phone}}</a></td><td><a href="/contact/{{contact.id}}">{{contact.position}}</a></td><td><a href="/contact/{{contact.id}}">{{contact.organization}}</a></td><td><a href="/contact/{{contact.id}}">{{contact.notes}}</a></td></tr>
 			{% endfor %}
 			</table>
 			{%endblock%}
