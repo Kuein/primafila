@@ -5,7 +5,7 @@
 <div class="row">
 <div class="col-md-1"></div>
 <div class="col-md-10 justify-content-center">
-	<form class="form-horizontal" method="post">
+	<form class="form-horizontal" method="post" enctype="multipart/form-data">
 		{{form.event_type}}
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
@@ -27,25 +27,56 @@
 		{% endfor %}
 			</table>
 		<table class="table table-sm table-responsive table-borderless primafila-table">
-			<tr><td>Titile</td><td>Opera</td><td>Role</td></tr>
+			<tr><td>Title</td><td>Opera</td><td>Role</td></tr>
 			<tr><td>{{form.title}}</td><td>{{form.opera}}</td><td>{{form.role}}</td></tr>
 			<tr><td>Status</td><td>Artist</td><td>Regie</td></tr>
 			<tr><td>{{form.status}}</td><td>{{form.artist}}</td><td>{{form.regie}}</td></tr>
 			<tr><td>Promoter</td><td>City</td><td>Dirigent</td></tr>
 			<tr><td>{{form.promoter}}</td><td>{{form.city}}</td><td>{{form.dirigent}}</td></tr>
-			<tr><td>Contact</td><td>Fee</td><td></td></tr>
+			<tr><td>Contact</td><td>Fee</td><td>History</td></tr>
 			<tr><td>{{form.contact}}</td><td><div class="input-group">{{form.fee}}<span class="input-group-text" style="padding: 0">{{form.fee_currency}}</span></div>
 					<p style="justify-content: space-between; display: flex"><span onclick="split_fee()">{{form.calculated_fee}} all in</span><span onclick="individual_fee()">{{form.individual_fee}} individual fee</span></p>
 					<div class="input-group indifee" style="display: none">{{form.travel_fee}}<span class="input-grop-text" style="padding: 0">{{form.travel_fee_type}}</span></div>
 					<div class="input-group indifee" style="display: none">{{form.accomodation_fee}}<span class="input-grop-text" style="padding: 0">{{form.accomodation_fee_type}}</span></div>
-				</td><td></td></tr>
+				</td><td>
+					<p>{{form.contract_requested}} contract requested {{event.contract_requested_details}}
+					<p>{{form.contract_received}} contract received {{event.contract_received_details}}
+					<p>{{form.contract_sent_artist}} contract sent to the artist {{event.contract_sent_to_artist_details}}
+					<p>{{form.contract_signed_artist}} contract signed by the artist {{event.contract_signed_artist_details}}
+					<p>{{form.contract_sent_promoter}} contract sent to the promoter {{event.contract_sent_to_promoter_details}}
+					<p>{{form.contract_signed_promoter}} contract signed by the promoter {{event.contract_signed_promoter_details}}
+					<p>{{form.invoice_sent}} invoice sent {{form.invoice_send_details}}
+				</td></tr>
 		</table>
 		<table class="table table-sm table-borderless table-responsive">
 
 				<tr><td>Notes</td><td>Inner notes</td></tr>
 				<tr><td>{{form.artist_notes}}</td><td>{{form.inner_notes}}</td></tr>
 				<tr><td>Files</td><td>Inner files</td></tr>
-				<tr><td>{{form.artist_files}}</td><td>{{form.inner_files}}</td></tr>
+				<tr><td>
+		{{af_formset.management_form}}
+		<div style="display: inline-flex"><table class="table table-responsive table-sm table-borderless">
+		{% for af_form in af_formset %}
+				<tr class="af_dataset">
+					<td>{{af_form.id}}</td>
+					<td>{{af_form.file}}</td>
+					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_artistfiles_set-TOTAL_FORMS', 'af_dataset')">+</button>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_artistfiles_set-TOTAL_FORMS', this)">-</button></td></tr>
+				{% endfor %}
+			</table>
+		</div>
+		</td><td>
+			{{if_formset.management_form}}
+			<div style="display: inline-flex"><table>
+			{% for if_form in if_formset %}
+				<tr class="inner_dataset">
+					<td>{{if_form.id}}</td>
+					<td>{{if_form.file}}</td>
+					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_innerfiles_set-TOTAL_FORMS', 'inner_dataset')">+</button>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_innerfiles_set-TOTAL_FORMS', this)">-</button></td></tr>
+			{% endfor %}	
+				</table></div>
+		</td></tr>
 		</table>
 				<button type="submit" class="btn btn-sm btn-secondary">Submit</button>
 	</form>

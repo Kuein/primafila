@@ -11,6 +11,8 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django_generate_series.models import generate_series
 from calendarik.models import (
+    ArtistFiles,
+    InnerFiles,
     CalendarEvent,
     Contact,
     Artist,
@@ -19,7 +21,6 @@ from calendarik.models import (
     Promoter,
     LastSession,
     Event,
-    City,
 )
 from django.contrib.auth.decorators import login_required
 from dateutil.relativedelta import relativedelta
@@ -32,9 +33,12 @@ from .forms import (
     TravelDataSetForm,
     EngagementDataSetForm,
     TravelDataSet,
+    ArtistFileForm,
+    InnerFileForm,
     EngagementDataSet,
+    ArtistFileFormset,
+    InnerFileFormset,
 )
-from dateutil.rrule import rrule, DAILY
 from django.forms import inlineformset_factory
 
 
@@ -73,7 +77,9 @@ def homepage(request):
     )
     if 1000 in artists:
         event_query = event_query.filter(
-            Q(event__isnull=True) | Q(engagement_type=1) | Q(event__artist_id__in=artists)
+            Q(event__isnull=True)
+            | Q(engagement_type=1)
+            | Q(event__artist_id__in=artists)
         )
     else:
         event_query = event_query.filter(
@@ -188,6 +194,7 @@ def get_roles(request):
         )
         return JsonResponse(list(roles), safe=False)
 
+
 @login_required
 def travel(request):
     formset = {}
@@ -197,15 +204,43 @@ def travel(request):
         if form.is_valid():
             form.save()
             formset = TravelDataSet(request.POST, instance=form.instance)
+            af_formset = ArtistFileFormset(
+                request.POST, request.FILES, instance=form.instance
+            )
+            if_formset = InnerFileFormset(
+                request.POST, request.FILES, instance=form.instance
+            )
             if formset.is_valid():
-#                CalendarEvent.objects.filter(event=form.instance).delete()
                 formset.save()
+            if af_formset.is_valid():
+                af_formset.save()
+            if if_formset.is_valid():
+                if_formset.save()
             return redirect("/")
     else:
         form = TravelForm()
-        formset = inlineformset_factory(parent_model=Event, model=CalendarEvent, form=TravelDataSetForm, extra=1,)
+        formset = inlineformset_factory(
+            parent_model=Event,
+            model=CalendarEvent,
+            form=TravelDataSetForm,
+            extra=1,
+        )
+        af_formset = inlineformset_factory(
+            parent_model=Event,
+            model=ArtistFiles,
+            form=ArtistFileForm,
+            extra=1,
+        )
+        if_formset = inlineformset_factory(
+            parent_model=Event,
+            model=InnerFiles,
+            form=InnerFileForm,
+            extra=1,
+        )
     return render(
-            request, "../templates/travel.html", {"form": form, "formset": formset, "start_date": date}
+        request,
+        "../templates/travel.html",
+        {"form": form, "formset": formset, "start_date": date, "af_formset": af_formset, "if_formset": if_formset},
     )
 
 
@@ -213,7 +248,22 @@ def travel(request):
 def edit_event(request):
     event_id = int(request.GET.get("id", 0))
     event = CalendarEvent.objects.get(pk=event_id)
-    historyformset = {}
+    af_formset = ArtistFileFormset(instance=event.event)
+    if len(af_formset) == 0:
+        af_formset = inlineformset_factory(
+            parent_model=Event,
+            model=ArtistFiles,
+            form=ArtistFileForm,
+            extra=1,
+        )
+    if_formset = InnerFileFormset(instance=event.event)
+    if len(if_formset) == 0:
+        if_formset = inlineformset_factory(
+            parent_model=Event,
+            model=InnerFiles,
+            form=InnerFileForm,
+            extra=1,
+        )
     if request.method == "GET":
         if event.event is None:
             form = OtherForm(instance=event)
@@ -223,14 +273,35 @@ def edit_event(request):
             form = TravelForm(instance=event.event)
             formset = TravelDataSet(instance=event.event)
             template = "../templates/travel.html"
+            return render(
+                request,
+                template,
+                {
+                    "form": form,
+                    "formset": formset,
+                    "af_formset": af_formset,
+                    "if_formset": if_formset,
+                },
+            )
         elif event.event.event_type == 4:
             template = "../templates/engagement.html"
             form = EngagementForm(instance=event.event)
             formset = EngagementDataSet(instance=event.event)
+            return render(
+                request,
+                template,
+                {
+                    "form": form,
+                    "event": event,
+                    "formset": formset,
+                    "af_formset": af_formset,
+                    "if_formset": if_formset,
+                },
+            )
         return render(
             request,
             template,
-            {"form": form, "formset": formset, "historyformset": historyformset},
+            {"form": form, "formset": formset},
         )
     else:
         if event.event is None:
@@ -240,6 +311,12 @@ def edit_event(request):
                 return redirect("/")
         if event.event.event_type == 3:
             form = TravelForm(request.POST, instance=event.event)
+            af_formset = ArtistFileFormset(
+                request.POST, request.FILES, instance=form.instance
+            )
+            if_formset = InnerFileFormset(
+                request.POST, request.FILES, instance=form.instance
+            )
             if form.is_valid():
                 form.save()
                 formset = TravelDataSet(request.POST, instance=event.event)
@@ -250,11 +327,22 @@ def edit_event(request):
                             form.save()
                             all_forms = all_forms.exclude(pk=form.instance.pk)
                     all_forms.delete()
+            if af_formset.is_valid():
+                af_formset.save()
+            if if_formset.is_valid():
+                if_formset.save()
         elif event.event.event_type == 4:
             form = EngagementForm(request.POST, instance=event.event)
+            formset = EngagementDataSet(request.POST, instance=event.event)
+            af_formset = ArtistFileFormset(
+                request.POST, request.FILES, instance=event.event
+            )
+            if_formset = InnerFileFormset(
+                request.POST, request.FILES, instance=event.event
+            )
             if form.is_valid():
+                breakpoint()
                 form.save()
-                formset = EngagementDataSet(request.POST, instance=event.event)
                 if formset.is_valid():
                     all_forms = CalendarEvent.objects.filter(event=event.event).all()
                     for form in formset:
@@ -262,64 +350,11 @@ def edit_event(request):
                             form.save()
                             all_forms = all_forms.exclude(pk=form.instance.pk)
                     all_forms.delete()
+                if af_formset.is_valid():
+                    af_formset.save()
+                if if_formset.is_valid():
+                    if_formset.save()
         return redirect("/")
-
-
-def get_artists_from_session(user):
-    last_session = LastSession.objects.get(user=user)
-    if last_session is not None:
-        artists = (
-            Artist.objects.filter(id__in=last_session.artists)
-            .values_list("id", "name")
-            .all()
-        )
-    else:
-        artists = Artist.objects.values_list("id", "name").all()
-    return artists
-
-
-def create_context(form, request):
-    start_date = request.GET.get("date")
-    all_cities = City.objects.only("name").all()
-    context = {
-        "form": form,
-        "start_date": start_date,
-        "all_cities": all_cities,
-        "artists": get_artists_from_session(request.user),
-    }
-    return context
-
-
-def fill_calendar(event, periods):
-    for period in periods:
-        for date in rrule(DAILY, dtstart=period[0], until=period[1]):
-            CalendarEvent.objects.create(
-                event=event,
-                date=date,
-                artist=event.artist,
-                status=event.status,
-                title=event.title,
-                engagement_type=period[2] if len(period) > 2 else None,
-            )
-
-
-def separate_form_data(request, form):
-    periods = []
-    for i in range(10):
-        if f"event_start_{i}" in request.POST.keys():
-            season_start = datetime.datetime.strptime(
-                request.POST[f"event_start_{i}"], "%Y-%m-%d"
-            ).date()
-            season_end = request.POST[f"event_end_{i}"]
-            if season_end == "":
-                season_end = season_start
-            else:
-                season_end = datetime.datetime.strptime(season_end, "%Y-%m-%d").date()
-            event_type = request.POST.get(f"event_type_{i}", None)
-            periods.append((season_start, season_end, event_type))
-    happening = form.cleaned_data.pop("happening")
-    artist = Artist.objects.get(id=form.cleaned_data.pop("artist"))
-    return periods, happening, artist
 
 
 @login_required
@@ -337,23 +372,58 @@ def other_event(request):
         {"form": form, "date": request.GET.get("date")},
     )
 
+
 @login_required
 def engagement(request):
-    formset = {}
     date = request.GET.get("date")
     if request.method == "POST":
         form = EngagementForm(request.POST)
+        formset = EngagementDataSet(request.POST, instance=form.instance)
+        af_formset = ArtistFileFormset(
+            request.POST, request.FILES, instance=form.instance
+        )
+        if_formset = InnerFileFormset(
+            request.POST, request.FILES, instance=form.instance
+        )
         if form.is_valid():
             form.save()
-            formset = EngagementDataSet(request.POST, instance=form.instance)
             if formset.is_valid():
                 formset.save()
+            if af_formset.is_valid():
+                af_formset.save()
+            if if_formset.is_valid():
+                if_formset.save()
             return redirect("/")
     else:
         form = EngagementForm()
-        formset = inlineformset_factory(parent_model=Event, model=CalendarEvent, form=EngagementDataSetForm, extra=1,)
+        formset = inlineformset_factory(
+            parent_model=Event,
+            model=CalendarEvent,
+            form=EngagementDataSetForm,
+            extra=1,
+        )
+        af_formset = inlineformset_factory(
+            parent_model=Event,
+            model=ArtistFiles,
+            form=ArtistFileForm,
+            extra=1,
+        )
+        if_formset = inlineformset_factory(
+            parent_model=Event,
+            model=InnerFiles,
+            form=InnerFileForm,
+            extra=1,
+        )
     return render(
-            request, "../templates/engagement.html", {"form": form, "formset": formset, "start_date": date}
+        request,
+        "../templates/engagement.html",
+        {
+            "form": form,
+            "formset": formset,
+            "start_date": date,
+            "af_formset": af_formset,
+            "if_formset": if_formset,
+        },
     )
 
 
@@ -383,6 +453,7 @@ def contact(request):
     else:
         form = ContactForm()
     return render(request, "../templates/contact.html", {"form": form})
+
 
 @login_required
 def edit_contact(request, contact_id):

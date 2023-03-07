@@ -5,7 +5,7 @@
 <div class="row">
 <div class="col-md-1"></div>
 <div class="col-md-10 justify-content-center">
-	<form class="form-horizontal" method="post">
+	<form class="form-horizontal" method="post" enctype="multipart/form-data">
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
 		{{ formset.management_form }}
@@ -19,7 +19,7 @@
 					<td>{{form.end_date}}</td>
 					<td>{{form.note}}</td>
 					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_calendarevent_set-TOTAL_FORMS')">+</button>
-						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS', {{form.id}})">-</button></td></tr>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS', this)">-</button></td></tr>
 		</div>
 		{% endfor %}
 			</table>
@@ -29,11 +29,38 @@
 				<tr><td>Notes</td><td>Inner notes</td></tr>
 				<tr><td>{{form.artist_notes}}</td><td>{{form.inner_notes}}</td></tr>
 				<tr><td>Files</td><td>Inner files</td></tr>
-				<tr><td>{{form.artist_files}}</td><td>{{form.inner_files}}</td></tr>
+				<tr><td>
+		{{af_formset.management_form}}
+		<div style="display: inline-flex"><table class="table table-responsive table-sm table-borderless">
+		{% for af_form in af_formset %}
+				<tr class="af_dataset">
+					<td>{{af_form.id}}</td>
+					<td>{{af_form.file}}</td>
+					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_artistfiles_set-TOTAL_FORMS', 'af_dataset')">+</button>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_artistfiles_set-TOTAL_FORMS', this, 'af_dataset')">-</button></td></tr>
+				{% endfor %}
+			</table>
+		</div>
+		</td><td>
+			{{if_formset.management_form}}
+			<div style="display: inline-flex"><table>
+			{% for if_form in if_formset %}
+				<tr class="inner_dataset">
+					<td>{{if_form.id}}</td>
+					<td>{{if_form.file}}</td>
+					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_innerfiles_set-TOTAL_FORMS', 'inner_dataset')">+</button>
+						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_innerfiles_set-TOTAL_FORMS', this, 'inner_dataset')">-</button></td></tr>
+			{% endfor %}	
+				</table></div>
+		</td></tr>
+		</table>
 			</table>
 				<button class="btn btn-secondary btn-sm" type="submit" class="btn btn-default">Submit</button>
 			</form>
 </div>
 <div class="col-md-1"></div>
 </div>
+<script>
+	function individual_onload() {}
+	</script>
 	{% endblock%}

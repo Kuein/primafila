@@ -7,8 +7,11 @@ from .models import (
     City,
     Role,
     Opera,
+    ArtistFiles,
+    InnerFiles,
 )
 from django.forms import inlineformset_factory
+from django.forms import ClearableFileInput
 
 
 class Datalist(forms.widgets.Select):
@@ -153,8 +156,6 @@ class TravelForm(forms.ModelForm):
             "artist",
             "inner_notes",
             "artist_notes",
-            "inner_files",
-            "artist_files",
         )
         widgets = {
             "artist": forms.Select(attrs={"class": "form-control"}),
@@ -189,6 +190,25 @@ class EngagementDataSetForm(forms.ModelForm):
             "title": forms.TextInput(attrs={"class": "form-control"}),
             "fee": forms.NumberInput(attrs={"class": "form-control"}),
             "currency": forms.Select(attrs={"class": "form-control"}),
+            "happend": forms.CheckboxInput(attrs={"class": "form-control"}),
+        }
+
+
+class ArtistFileForm(forms.ModelForm):
+    class Meta:
+        model = ArtistFiles
+        fields = ("file", "event")
+        widgets = {
+            "file": forms.FileInput(attrs={"class": "form-control"}),
+        }
+
+
+class InnerFileForm(forms.ModelForm):
+    class Meta:
+        model = InnerFiles
+        fields = ("file", "event")
+        widgets = {
+            "file": forms.FileInput(attrs={"class": "form-control"}),
         }
 
 
@@ -213,16 +233,43 @@ class EngagementForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["dirigent"].widget.choices = Event.objects.distinct().values_list("dirigent", "dirigent").all()
-        self.fields["regie"].widget.choices = Event.objects.distinct().values_list("regie", "regie").all()
-        self.fields["city"].widget.choices = City.objects.values_list("id", "name").all()
-        self.fields["opera"].widget.choices = Opera.objects.values_list("id", "name").all()
-        self.fields["role"].widget.choices = Role.objects.values_list("id", "name").all()
-        self.fields["promoter"].widget.choices = Promoter.objects.values_list("id", "name").all()
-    
+        self.fields["dirigent"].widget.choices = (
+            Event.objects.distinct().values_list("dirigent", "dirigent").all()
+        )
+        self.fields["regie"].widget.choices = (
+            Event.objects.distinct().values_list("regie", "regie").all()
+        )
+        self.fields["city"].widget.choices = City.objects.values_list(
+            "id", "name"
+        ).all()
+        self.fields["opera"].widget.choices = Opera.objects.values_list(
+            "id", "name"
+        ).all()
+        self.fields["role"].widget.choices = Role.objects.values_list(
+            "id", "name"
+        ).all()
+        self.fields["promoter"].widget.choices = Promoter.objects.values_list(
+            "id", "name"
+        ).all()
+
     class Meta:
         model = Event
         fields = (
+            "contract_requested",
+            "contract_requested_details",
+            "contract_received",
+            "contract_received_details",
+            "contract_sent_artist",
+            "contract_sent_artist_details",
+            "contract_signed_artist",
+            "contract_signed_artist_details",
+            "contract_sent_promoter",
+            "contract_sent_promoter_details",
+            "contract_signed_promoter",
+            "contract_signed_promoter_details",
+            "invoice_sent",
+            "invoice_sent_details",
+            "conact_number",
             "fee_currency",
             "calculated_fee",
             "individual_fee",
@@ -237,8 +284,6 @@ class EngagementForm(forms.ModelForm):
             "event_type",
             "inner_notes",
             "artist_notes",
-            "inner_files",
-            "artist_files",
             "opera",
             "role",
             "promoter",
@@ -268,9 +313,9 @@ class EngagementForm(forms.ModelForm):
             "title": forms.TextInput(attrs={"class": "form-control"}),
             "artist": forms.Select(attrs={"class": "form-control", "required": True}),
             "inner_notes": forms.Textarea(attrs={"class": "form-control", "rows": "4"}),
-            "artist_notes": forms.Textarea(attrs={"class": "form-control", "rows": "4"}),
-            "inner_files": forms.FileInput(attrs={"class": "form-control"}),
-            "artist_files": forms.FileInput(attrs={"class": "form-control"}),
+            "artist_notes": forms.Textarea(
+                attrs={"class": "form-control", "rows": "4"}
+            ),
             "status": forms.Select(attrs={"class": "form-control"}),
             "fee": forms.NumberInput(attrs={"class": "form-control"}),
             "visible_to_artist": forms.CheckboxInput(attrs={"class": "form-control"}),
@@ -316,4 +361,11 @@ EngagementDataSet = inlineformset_factory(
     model=CalendarEvent,
     form=EngagementDataSetForm,
     extra=0,
+)
+
+ArtistFileFormset = inlineformset_factory(
+    parent_model=Event, model=ArtistFiles, form=ArtistFileForm, extra=0
+)
+InnerFileFormset = inlineformset_factory(
+    parent_model=Event, model=InnerFiles, form=InnerFileForm, extra=0
 )

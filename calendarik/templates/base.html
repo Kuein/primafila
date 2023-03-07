@@ -154,8 +154,8 @@ text-align: center;
 			}
 		}
 	
-	function add_dataset(formId) {
-		var dataset = document.getElementsByClassName("dataset");
+	function add_dataset(formId, dataset_id="dataset") {
+		var dataset = document.getElementsByClassName(dataset_id);
 		var new_dataset = dataset[0].cloneNode(true);
 		for (var i = 0; i < new_dataset.childNodes.length; i++) {
 			var child = new_dataset.childNodes[i].childNodes[0];
@@ -167,8 +167,8 @@ text-align: center;
 		dataset[0].parentNode.appendChild(new_dataset);
 		document.getElementById(formId).value = dataset.length;
 	}
-	function remove_dataset(formId, currentForm) {
-		var dataset = document.getElementsByClassName("dataset");
+	function remove_dataset(formId, currentForm, dataset_id="dataset") {
+		var dataset = document.getElementsByClassName(dataset_id);
 		if (dataset.length > 1) {
 			dataset[0].parentNode.removeChild(currentForm.parentNode.parentNode);
 		document.getElementById(formId).value = dataset.length;
