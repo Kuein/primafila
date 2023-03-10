@@ -3,7 +3,7 @@
 	<table class="table-calendar table table-responsive table-sm"><thead><tr>
 				{% for period in periods %}
 				<th class="calendar_date"></th>
-				<th class="calendar_event">{{period}}</th>
+				<th class="calendar_event">{{period|date:'Y M'}}</th>
 				{% endfor %}
 			</tr></thead><tbody>
 					{% for item in data %}

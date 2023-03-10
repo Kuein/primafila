@@ -120,8 +120,22 @@
 			}
 		}
 	}
+	function get_contact() {
+			var prom_value = document.getElementById("id_promoter").value;
+			const url = "/get_contact?promoter="+prom_value;
+			fetch(url)
+			.then((resp) => resp.json()).then(function(data) {
+				var role_list = document.getElementById("contact");
+				role_list.innerHTML = "";
+				for (var i = 0; i < data.length; i++) {
+					var option = document.createElement("option");
+					option.value = data[i].name;
+					role_list.appendChild(option);
+				}
+			});
+			document.getElementById("id_contact").value = "";
+		};
 	function get_role() {
-		console.log("get_role");
 			var opera_value = document.getElementById("id_opera").value;
 			const url = "/get_roles?opera="+opera_value;
 			fetch(url)
@@ -139,8 +153,8 @@
 	function individual_onload() {
 		split_fee();
 		individual_fee();
-		console.log("onload");
 		document.getElementById("id_opera").addEventListener("change", get_role);
+		document.getElementById("id_promoter").addEventListener("change", get_contact);
 	}
 	</script>
 	{% endblock %}
