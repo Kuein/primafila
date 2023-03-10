@@ -168,7 +168,7 @@ def search(request):
             search_query = CalendarEvent.objects
             if search_form.cleaned_data["opera"]:
                 search_query = search_query.filter(
-                    event__opera__title__icontains=search_form.cleaned_data["opera"]
+                    event__opera__name__icontains=search_form.cleaned_data["opera"]
                 )
             if search_form.cleaned_data["role"]:
                 search_query = search_query.filter(

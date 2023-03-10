@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from calendarik import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -34,4 +37,4 @@ urlpatterns = [
     path("other", views.other_event, name="other"),
     path("engagement", views.engagement, name="engagement"),
     path("contact/<int:contact_id>", views.edit_contact, name="edit_contact"),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
