@@ -177,6 +177,7 @@ class EngagementDataSetForm(forms.ModelForm):
             "title",
             "fee",
             "currency",
+            "happend",
         )
         widgets = {
             "start_date": forms.DateInput(
@@ -218,16 +219,16 @@ class EngagementForm(forms.ModelForm):
         required=False,
     )
     opera = OperaChoiceField(
-        widget=Datalist(attrs={"class": "form-control"}), required=True
+            widget=Datalist(attrs={"class": "form-control"}), required=True
     )
     role = RoleChoiceField(
         widget=Datalist(attrs={"class": "form-control"}), required=False
     )
     promoter = PromoterChoiceField(
-        widget=Datalist(attrs={"class": "form-control"}), required=False
+            widget=Datalist(attrs={"class": "form-control"}), required=True
     )
     contact = ContactChoiceField(
-        widget=Datalist(attrs={"class": "form-control"}), required=False
+            widget=Datalist(attrs={"class": "form-control"}), required=True
     )
     event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=4)
 

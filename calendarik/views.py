@@ -98,7 +98,7 @@ def homepage(request):
     ).annotate(events=ArraySubquery(event_query))
     query = groupby(query, lambda x: x.term.strftime("%Y-%m"))
     query = [(x[0], list(x[1])) for x in query]
-    periods = [x[0] for x in query]
+    periods = [datetime.datetime.strptime(x[0],"%Y-%m") for x in query]
     query = zip_longest(*[x[1] for x in query], fillvalue=None)
     art_query = Artist.objects.filter(calendar=True).values_list("id", "name").all()
     LastSession.objects.update_or_create(
@@ -193,6 +193,14 @@ def get_roles(request):
             Role.objects.filter(opera__name__icontains=opera_id).values("name").all()
         )
         return JsonResponse(list(roles), safe=False)
+
+def get_contacts(request):
+    if request.method == "GET":
+        prom_id = request.GET.get("promoter")
+        contacts = (
+            Contact.objects.filter(organization__name__icontains=prom_id).values("name").all()
+        )
+        return JsonResponse(list(contacts), safe=False)
 
 
 @login_required
