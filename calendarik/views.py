@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 import datetime
 import calendar
 from itertools import groupby, zip_longest
@@ -361,6 +362,21 @@ def edit_event(request):
                     af_formset.save()
                 if if_formset.is_valid():
                     if_formset.save()
+            else:
+                for err in form.errors:
+                    if err == "__all__":
+                        continue
+                    messages.add_message(request, messages.ERROR, f"{err}: {form.errors[err].as_text()}")
+                return render(
+                    request,
+                    "../templates/engagement.html",
+                    {
+                        "form": form,
+                        "event": event,
+                        "formset": formset,
+                        "af_formset": af_formset,
+                        "if_formset": if_formset,
+                    },)
         return redirect("/")
 
 
