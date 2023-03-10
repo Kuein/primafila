@@ -10,7 +10,7 @@
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
 		{{ formset.management_form }}
-		<tr><td></td><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td style="display: none" id="fee-header">Fee</td><td></td></tr>
+		<tr><td></td><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td style="display: none" id="fee-header">Fee</td><td>Happend</td><td></td></tr>
 		{% for form in formset %}
 		<div>
 				<tr class="dataset">
@@ -21,6 +21,7 @@
 					<td>{{form.end_date}}</td>
 					<td>{{form.note}}</td>
 					<td><div class="input-group formset-fee" style="display: none">{{form.fee}}<span class="input-group-text" style="padding:0">{{form.currency}}</span></div></td>
+					<td>{{form.happend}}</td>
 					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_calendarevent_set-TOTAL_FORMS')">+</button>
 						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS', this)">-</button></td></tr>
 		</div>
@@ -47,6 +48,7 @@
 					<p>{{form.contract_signed_promoter}} contract signed by the promoter {{event.contract_signed_promoter_details}}
 					<p>{{form.invoice_sent}} invoice sent {{form.invoice_send_details}}
 				</td></tr>
+				<tr><td>{{form.visible_to_artist}} Visible to artist</td><td>{{form.another_agency}} Another agency</td><td>Contract number: {{form.contract_number}}</td></tr>
 		</table>
 		<table class="table table-sm table-borderless table-responsive">
 

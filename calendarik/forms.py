@@ -58,10 +58,10 @@ class TravelDataSetForm(forms.ModelForm):
 
 
 class CityChoiceField(forms.CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.widget = Datalist(attrs={"class": "form-control"})
-        self.widget.choices = City.objects.values_list("id", "name").all()
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.widget = Datalist(attrs={"class": "form-control"})
+#        self.widget.choices = City.objects.values_list("id", "name").all()
 
     def clean(self, value):
         value = super().clean(value)
@@ -72,10 +72,10 @@ class CityChoiceField(forms.CharField):
 
 
 class OperaChoiceField(forms.CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.widget = Datalist(attrs={"class": "form-control"})
-        self.widget.choices = Opera.objects.values_list("id", "name").all()
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.widget = Datalist(attrs={"class": "form-control"})
+#        self.widget.choices = Opera.objects.values_list("id", "name").all()
 
     def clean(self, value):
         value = super().clean(value)
@@ -86,10 +86,10 @@ class OperaChoiceField(forms.CharField):
 
 
 class RoleChoiceField(forms.CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.widget = Datalist(attrs={"class": "form-control"})
-        self.widget.choices = Role.objects.values_list("id", "name").all()
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.widget = Datalist(attrs={"class": "form-control"})
+#        self.widget.choices = Role.objects.values_list("id", "name").all()
 
     def clean(self, value, opera=None):
         value = super().clean(value)
@@ -105,10 +105,10 @@ class RoleChoiceField(forms.CharField):
 
 #
 class PromoterChoiceField(forms.CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.widget = Datalist(attrs={"class": "form-control"})
-        self.widget.choices = Promoter.objects.values_list("id", "name").all()
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.widget = Datalist(attrs={"class": "form-control"})
+#        self.widget.choices = Promoter.objects.values_list("id", "name").all()
 
     def clean(self, value):
         value = super().clean(value)
@@ -119,10 +119,10 @@ class PromoterChoiceField(forms.CharField):
 
 
 class ContactChoiceField(forms.CharField):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.widget = Datalist(attrs={"class": "form-control"})
-        self.widget.choices = Promoter.objects.values_list("id", "name").all()
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.widget = Datalist(attrs={"class": "form-control"})
+#        self.widget.choices = Promoter.objects.values_list("id", "name").all()
 
     def clean(self, value, prom=None):
         value = super().clean(value)
@@ -134,7 +134,7 @@ class ContactChoiceField(forms.CharField):
                 name=value, organization=promoter
             )
         else:
-            contact, _ = Contact.objects.get_or_create(name=value)
+            contact, _ = Contact.objects.get_or_create(name=value, organization=None)
         return contact
 
 
@@ -191,7 +191,7 @@ class EngagementDataSetForm(forms.ModelForm):
             "title": forms.TextInput(attrs={"class": "form-control"}),
             "fee": forms.NumberInput(attrs={"class": "form-control"}),
             "currency": forms.Select(attrs={"class": "form-control"}),
-            "happend": forms.CheckboxInput(attrs={"class": "form-control"}),
+#            "happend": forms.CheckboxInput(attrs={"class": "form-control"}),
         }
 
 
@@ -219,16 +219,16 @@ class EngagementForm(forms.ModelForm):
         required=False,
     )
     opera = OperaChoiceField(
-            widget=Datalist(attrs={"class": "form-control"}), required=True
+            widget=Datalist(attrs={"class": "form-control", "required":"true"}), required=True
     )
     role = RoleChoiceField(
         widget=Datalist(attrs={"class": "form-control"}), required=False
     )
     promoter = PromoterChoiceField(
-            widget=Datalist(attrs={"class": "form-control"}), required=True
+            widget=Datalist(attrs={"class": "form-control", "required":"true"}), required=True
     )
     contact = ContactChoiceField(
-            widget=Datalist(attrs={"class": "form-control"}), required=True
+            widget=Datalist(attrs={"class": "form-control", "required":"true"}), required=True
     )
     event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=4)
 
@@ -252,6 +252,7 @@ class EngagementForm(forms.ModelForm):
         self.fields["promoter"].widget.choices = Promoter.objects.values_list(
             "id", "name"
         ).all()
+        self.fields["contact"].widget.choices = Contact.objects.values_list("id", "name").all()
 
     class Meta:
         model = Event
@@ -270,7 +271,7 @@ class EngagementForm(forms.ModelForm):
             "contract_signed_promoter_details",
             "invoice_sent",
             "invoice_sent_details",
-            "conact_number",
+            "contract_number",
             "fee_currency",
             "calculated_fee",
             "individual_fee",
@@ -315,8 +316,8 @@ class EngagementForm(forms.ModelForm):
             ),
             "status": forms.Select(attrs={"class": "form-control"}),
             "fee": forms.NumberInput(attrs={"class": "form-control"}),
-            "visible_to_artist": forms.CheckboxInput(attrs={"class": "form-control"}),
-            "another_agency": forms.CheckboxInput(attrs={"class": "form-control"}),
+            "visible_to_artist": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "another_agency": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def clean(self, *args, **kwargs):

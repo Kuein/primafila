@@ -148,7 +148,7 @@ class Event(models.Model):
     contract_signed_promoter_details = models.CharField(max_length=100, null=True, blank=True)
     invoice_sent = models.BooleanField(default=False)
     invoice_sent_details = models.CharField(max_length=100, null=True, blank=True)
-    conact_number = models.CharField(max_length=100, null=True, blank=True)
+    contract_number = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -167,8 +167,8 @@ class Event(models.Model):
             self.title = f"{self.title} a.A."
         if self.title.endswith("a.A.") and not self.another_agency:
             self.title = self.title[:-4]
-        if self.visible_to_artist or not self.status:
-            self.status = "inner"
+#        if self.visible_to_artist or not self.status:
+#            self.status = "inner"
         super().save(*arg, **kwargs)
 
 
