@@ -269,20 +269,6 @@ def edit_event(request):
             form = OtherForm(instance=event)
             template = "../templates/other.html"
             formset = {}
-        elif event.event.event_type == 3:
-            form = TravelForm(instance=event.event)
-            formset = TravelDataSet(instance=event.event)
-            template = "../templates/travel.html"
-            return render(
-                request,
-                template,
-                {
-                    "form": form,
-                    "formset": formset,
-                    "af_formset": af_formset,
-                    "if_formset": if_formset,
-                },
-            )
         elif event.event.event_type == 4:
             template = "../templates/engagement.html"
             form = EngagementForm(instance=event.event)
@@ -293,6 +279,20 @@ def edit_event(request):
                 {
                     "form": form,
                     "event": event,
+                    "formset": formset,
+                    "af_formset": af_formset,
+                    "if_formset": if_formset,
+                },
+            )
+        else:
+            form = TravelForm(instance=event.event)
+            formset = TravelDataSet(instance=event.event)
+            template = "../templates/travel.html"
+            return render(
+                request,
+                template,
+                {
+                    "form": form,
                     "formset": formset,
                     "af_formset": af_formset,
                     "if_formset": if_formset,
@@ -341,7 +341,6 @@ def edit_event(request):
                 request.POST, request.FILES, instance=event.event
             )
             if form.is_valid():
-                breakpoint()
                 form.save()
                 if formset.is_valid():
                     all_forms = CalendarEvent.objects.filter(event=event.event).all()

@@ -8,6 +8,7 @@
 	<form class="form-horizontal" method="post" enctype="multipart/form-data">
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
+		{{form.event_type}}
 		{{ formset.management_form }}
 		<tr><td></td><td>Travel type</td><td>Start date</td><td>End date</td><td>Note</td><td></td></tr>
 		{% for form in formset %}

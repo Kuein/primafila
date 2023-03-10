@@ -140,7 +140,7 @@ class ContactChoiceField(forms.CharField):
 
 class TravelForm(forms.ModelForm):
     city = CityChoiceField(widget=Datalist(attrs={"class": "form-control"}))
-    event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=4)
+    event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=3)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -297,13 +297,9 @@ class EngagementForm(forms.ModelForm):
         widgets = {
             "regie": Datalist(
                 attrs={"class": "form-control"},
-                choices=Event.objects.distinct().values_list("regie", "regie").all(),
             ),
             "dirigent": Datalist(
                 attrs={"class": "form-control"},
-                choices=Event.objects.distinct()
-                .values_list("dirigent", "dirigent")
-                .all(),
             ),
             "travel_fee_type": forms.Select(attrs={"class": "form-control"}),
             "accomodation_fee_type": forms.Select(attrs={"class": "form-control"}),
