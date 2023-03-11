@@ -77,9 +77,6 @@ EVENT_STATUS = (
     ("request", "Request"),
     ("confirmed", "Confirmed"),
     ("contract", "Contract"),
-    ("happening", "Happening"),
-    ("inner", "Inner"),
-    ("normal", "Normal"),
 )
 TRAVEL_TYPE = ((1, "Travel to"), (2, "Travel from"), (3, "Hotel"))
 ENGAGEMENT_TYPE = ((1, "Premiere"), (2, "Performance"), (3, "Rehearsal"))
@@ -115,7 +112,7 @@ class Event(models.Model):
     status = models.CharField(
         max_length=100, choices=EVENT_STATUS, null=True, blank=True, default="normal"
     )
-    visible_to_artist = models.BooleanField(default=False)
+    visible_to_artist = models.BooleanField(default=True)
     another_agency = models.BooleanField(default=False)
     last_edited = models.CharField(max_length=100, null=True, blank=True)
 
@@ -127,6 +124,8 @@ class Event(models.Model):
 
     accomodation_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     accomodation_fee_type = models.IntegerField(choices=TRAVEL_PAY_TYPE, null=True, blank=True)
+
+    probengeld_fee = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
     calculated_fee = models.BooleanField(default=True)
     individual_fee = models.BooleanField(default=False)
@@ -163,12 +162,10 @@ class Event(models.Model):
                 self.title = f"🏠 {self.city}"
         if not self.title:
             self.title = f"{self.city} - {self.opera}"
-        if not self.title.endswith("a.A.") and self.another_agency:
+        if not self.title.lower().endswith("a.a.") and self.another_agency:
             self.title = f"{self.title} a.A."
-        if self.title.endswith("a.A.") and not self.another_agency:
+        if self.title.lower().endswith("a.a.") and not self.another_agency:
             self.title = self.title[:-4]
-#        if self.visible_to_artist or not self.status:
-#            self.status = "inner"
         super().save(*arg, **kwargs)
 
 
@@ -225,6 +222,10 @@ class CalendarEvent(models.Model):
             self.title = f"🏠 {self.event.city}"
         if self.event and self.event.title and not self.title:
             self.title = self.event.title
-        if self.engagement_type == 1:
+        if self.engagement_type in (1,2):
             self.title = self.title.upper()
+        if self.event and self.event.another_agency and not self.title.lower().endswith("a.A."):
+            self.title = f"{self.title} a.A."
+        if self.event and self.title.lower().endswith("a.a.") and not self.event.another_agency:
+            self.title = self.title[:-4]
         super().save(*args, **kwargs)

@@ -10,7 +10,7 @@
 		{% csrf_token %}
 			<table class="table table-sm table-responsive table-borderless">
 		{{ formset.management_form }}
-		<tr><td></td><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td style="display: none" id="fee-header">Fee</td><td>Happend</td><td></td></tr>
+		<tr><td></td><td>Engagement type</td><td>Title</td><td>Start date</td><td>End date</td><td>Note</td><td style="display: none" id="fee-header">Fee</td><td></td><td></td></tr>
 		{% for form in formset %}
 		<div>
 				<tr class="dataset">
@@ -21,7 +21,7 @@
 					<td>{{form.end_date}}</td>
 					<td>{{form.note}}</td>
 					<td><div class="input-group formset-fee" style="display: none">{{form.fee}}<span class="input-group-text" style="padding:0">{{form.currency}}</span></div></td>
-					<td>{{form.happend}}</td>
+					<td>{{form.happend}} Canceled</td>
 					<td><button class="btn btn-sm btn-secondary" type="button" onClick="add_dataset('id_calendarevent_set-TOTAL_FORMS')">+</button>
 						<button type="button" class="btn btn-sm btn-secondary" onClick="remove_dataset('id_calendarevent_set-TOTAL_FORMS', this)">-</button></td></tr>
 		</div>
@@ -37,8 +37,9 @@
 			<tr><td>Contact</td><td>Fee</td><td>History</td></tr>
 			<tr><td>{{form.contact}}</td><td><div class="input-group">{{form.fee}}<span class="input-group-text" style="padding: 0">{{form.fee_currency}}</span></div>
 					<p style="justify-content: space-between; display: flex"><span onclick="split_fee()">{{form.calculated_fee}} all in</span><span onclick="individual_fee()">{{form.individual_fee}} individual fee</span></p>
-					<div class="input-group indifee" style="display: none">{{form.travel_fee}}<span class="input-grop-text" style="padding: 0">{{form.travel_fee_type}}</span></div>
-					<div class="input-group indifee" style="display: none">{{form.accomodation_fee}}<span class="input-grop-text" style="padding: 0">{{form.accomodation_fee_type}}</span></div>
+					<div class="input-group indifee" style="display: none"><span class="input-group-text">Probengeld</span>{{form.probengeld_fee}}<span class="input-group-text" style="padding: 0">{{form.travel_fee_type}}</span></div>
+					<div class="input-group indifee" style="display: none"><span class="input-group-text">Travel</span>{{form.travel_fee}}<span class="input-group-text" style="padding: 0">{{form.travel_fee_type}}</span></div>
+					<div class="input-group indifee" style="display: none"><span class="input-group-text">Accomodation</span>{{form.accomodation_fee}}<span class="input-grop-text" style="padding: 0">{{form.accomodation_fee_type}}</span></div>
 				</td><td>
 					<p>{{form.contract_requested}} contract requested {{event.contract_requested_details}}
 					<p>{{form.contract_received}} contract received {{event.contract_received_details}}
@@ -124,19 +125,27 @@
 	}
 	function get_contact() {
 			var prom_value = document.getElementById("id_promoter").value;
+		var contact = document.getElementById("id_contact").value;
 			const url = "/get_contact?promoter="+prom_value;
 			fetch(url)
 			.then((resp) => resp.json()).then(function(data) {
-				var role_list = document.getElementById("contact");
+				var role_list = document.getElementById("id_contact");
 				role_list.innerHTML = "";
+					var option = document.createElement("option");
+					option.innerHTML = "---------";
+					role_list.appendChild(option);
 				for (var i = 0; i < data.length; i++) {
 					var option = document.createElement("option");
-					option.value = data[i].name;
+					option.value = data[i][0];
+					option.innerHTML = data[i][1];
+					if (contact == data[i][0]) {
+						option.selected = true;
+					}
 					role_list.appendChild(option);
 				}
 			});
 			document.getElementById("id_contact").value = "";
-		};
+	}
 	function get_role() {
 			var opera_value = document.getElementById("id_opera").value;
 			const url = "/get_roles?opera="+opera_value;
@@ -144,6 +153,7 @@
 			.then((resp) => resp.json()).then(function(data) {
 				var role_list = document.getElementById("role");
 				role_list.innerHTML = "";
+
 				for (var i = 0; i < data.length; i++) {
 					var option = document.createElement("option");
 					option.value = data[i].name;
@@ -152,11 +162,29 @@
 			});
 			document.getElementById("id_role").value = "";
 		};
+	function check_engagement(element) {
+			let parent = element.closest("tr");
+			if (element.value != 3) {
+				parent.childNodes[9].childNodes.forEach(node => {
+					console.log(node);
+					node.value = "";
+					node.style.display = "none";
+				})}
+			else {
+				parent.childNodes[9].childNodes.forEach(node => {
+					node.style.display = "block";
+				});
+			}}
 	function individual_onload() {
 		split_fee();
 		individual_fee();
+		get_contact();
 		document.getElementById("id_opera").addEventListener("change", get_role);
 		document.getElementById("id_promoter").addEventListener("change", get_contact);
+		var list = document.getElementsByClassName("engagement-type")
+			for (let item of list) {
+			check_engagement(item);
+		};
 	}
 	</script>
 	{% endblock %}

@@ -68,10 +68,12 @@ def homepage(request):
     date = datetime.date(date.year, date.month, 1)
     year_ago = date - relativedelta(years=1)
     six_months = date + relativedelta(months=+5)
+    one_month = date + relativedelta(months=+1)
     six_months_pre = six_months.replace(
         day=calendar.monthrange(six_months.year, six_months.month)[1]
     )
     six_months_ago = date - relativedelta(months=+5)
+    one_month_ago = date - relativedelta(months=+1)
     year_ahead = date + relativedelta(years=+1)
     event_query = CalendarEvent.objects.filter(
         start_date__lte=OuterRef("term"), end_date__gte=OuterRef("term")
@@ -92,6 +94,7 @@ def homepage(request):
             event_title="title",
             status="event__status",
             happend="happend",
+            visible_to_artist="event__visible_to_artist",
         )
     )
     query = generate_series(
@@ -128,6 +131,8 @@ def homepage(request):
             "year_ahead": year_ahead,
             "six_months_ago": six_months_ago,
             "six_months_ahead": six_months,
+            "one_month_ago": one_month_ago,
+            "one_month_ahead": one_month,
             "today": datetime.datetime.now(),
             "artists": nice_artists,
         },
@@ -199,7 +204,7 @@ def get_contacts(request):
     if request.method == "GET":
         prom_id = request.GET.get("promoter")
         contacts = (
-            Contact.objects.filter(organization__name__icontains=prom_id).values("name").all()
+            Contact.objects.filter(organization__name__icontains=prom_id).values_list("id", "name").all()
         )
         return JsonResponse(list(contacts), safe=False)
 

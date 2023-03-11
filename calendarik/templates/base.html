@@ -102,7 +102,9 @@ text-align: center;
 	    <div class="container-sm">
 		    <a class="btn btn-sm btn-secondary" href="/?date={{year_ago|date:"Y-m-d"}}">-12</a>
 		    <a class="btn btn-sm btn-secondary" href="/?date={{six_months_ago|date:"Y-m-d"}}">-6</a>
+		    <a class="btn btn-sm btn-secondary" href="/?date={{one_month_ago|date:"Y-m-d"}}">-1</a>
 		    <a class="btn btn-sm btn-secondary" href="/?date={{today|date:"Y-m-d"}}">Today</a>
+		    <a class="btn btn-sm btn-secondary" href="/?date={{one_month_ahead|date:"Y-m-d"}}">+1</a>
 		    <a class="btn btn-sm btn-secondary" href="/?date={{six_months_ahead|date:"Y-m-d"}}">+6</a>
 		    <a class="btn btn-sm btn-secondary" href="/?date={{year_ahead|date:"Y-m-d"}}">+12</a>
 	    </div>
@@ -206,7 +208,6 @@ text-align: center;
 		     correct_date();
 		     correct_from_datalist("id_city", "city");
 		     correct_from_datalist("id_promoter", "promoter");
-		     correct_from_datalist("id_contact", "contact");
 		     correct_from_datalist("id_opera", "opera");
 		     correct_from_datalist("id_role", "role");
 		     correct_from_datalist("id_regie", "regie");

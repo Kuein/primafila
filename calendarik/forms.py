@@ -184,7 +184,7 @@ class EngagementDataSetForm(forms.ModelForm):
                 attrs={"type": "date", "class": "form-control period-start"}
             ),
             "note": forms.TextInput(attrs={"class": "form-control"}),
-            "engagement_type": forms.Select(attrs={"class": "form-control"}),
+            "engagement_type": forms.Select(attrs={"class": "form-control engagement-type", "onchange":"check_engagement(this)"}),
             "end_date": forms.DateInput(
                 attrs={"type": "date", "class": "form-control period-end"}
             ),
@@ -227,9 +227,10 @@ class EngagementForm(forms.ModelForm):
     promoter = PromoterChoiceField(
             widget=Datalist(attrs={"class": "form-control", "required":"true"}), required=True
     )
-    contact = ContactChoiceField(
-            widget=Datalist(attrs={"class": "form-control", "required":"true"}), required=True
-    )
+    contact = forms.ModelChoiceField(queryset=Contact.objects.all(), required=True, widget=forms.Select(attrs={"class": "form-control"}))
+#    ContactChoiceField(
+#            widget=Datalist(attrs={"class": "form-control", "required":"true"}), required=True
+#    )
     event_type = forms.IntegerField(widget=forms.HiddenInput(), initial=4)
 
     def __init__(self, *args, **kwargs):
@@ -252,7 +253,7 @@ class EngagementForm(forms.ModelForm):
         self.fields["promoter"].widget.choices = Promoter.objects.values_list(
             "id", "name"
         ).all()
-        self.fields["contact"].widget.choices = Contact.objects.values_list("id", "name").all()
+#        self.fields["contact"].widget.choices = Contact.objects.values_list("id", "name").all()
 
     class Meta:
         model = Event
@@ -287,6 +288,7 @@ class EngagementForm(forms.ModelForm):
             "inner_notes",
             "artist_notes",
             "opera",
+            "probengeld_fee",
             "role",
             "promoter",
             "contact",
@@ -306,6 +308,7 @@ class EngagementForm(forms.ModelForm):
             "travel_fee_type": forms.Select(attrs={"class": "form-control"}),
             "accomodation_fee_type": forms.Select(attrs={"class": "form-control"}),
             "travel_fee": forms.NumberInput(attrs={"class": "form-control"}),
+            "probengeld_fee": forms.NumberInput(attrs={"class": "form-control"}),
             "accomodation_fee": forms.NumberInput(attrs={"class": "form-control"}),
             "fee_currency": forms.Select(attrs={"class": "form-control"}),
             "title": forms.TextInput(attrs={"class": "form-control"}),
@@ -322,7 +325,6 @@ class EngagementForm(forms.ModelForm):
 
     def clean(self, *args, **kwargs):
         self.fields["role"].clean(self.data["role"], self.data["opera"])
-        self.fields["contact"].clean(self.data["contact"], self.data["promoter"])
         super().clean(*args, **kwargs)
         return self.cleaned_data
 
