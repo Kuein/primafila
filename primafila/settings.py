@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "calendarik",
     "django_generate_series",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
